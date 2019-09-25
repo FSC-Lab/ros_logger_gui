@@ -18,8 +18,9 @@
 #include "ui_main_window.h"
 #include "qnode.hpp"
 
-#define RUNNING 1
-#define STOPPED 0
+#define RUNNING 2
+#define STOPPED 1
+#define UNSTARTED 0
 
 /*****************************************************************************
 ** Namespace
@@ -68,6 +69,7 @@ public Q_SLOTS:
             void on_button_refresh_all_clicked(bool check );
             void on_button_update_topic_clicked(bool check );
             void on_button_reset_topic_clicked(bool check);
+            void on_button_refresh_state_clicked(bool check);
     /******************************************
     ** Manual connections
     *******************************************/

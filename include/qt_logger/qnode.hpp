@@ -59,6 +59,7 @@ public:
 
     enum LoggingState
     {
+        Unstarted,
         Stopped,
         Running
     } state;
@@ -67,7 +68,6 @@ public:
     
     void start_logging();
     void stop_logging();
-
     void set_savefile(QString filename);
     void set_topics(std::vector<std::string> new_topics);
 
