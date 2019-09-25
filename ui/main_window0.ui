@@ -14,7 +14,7 @@
    <string>QRosApp</string>
   </property>
   <property name="windowIcon">
-   <iconset resource="../../qt_recorder/resources/images.qrc">
+   <iconset resource="../resources/images.qrc">
     <normaloff>:/images/icon.png</normaloff>:/images/icon.png</iconset>
   </property>
   <property name="locale">
@@ -54,7 +54,7 @@
           </property>
           <layout class="QGridLayout" name="gridLayout_3">
            <item row="3" column="1">
-            <widget class="QPushButton" name="button_stop_logging">
+            <widget class="QPushButton" name="button_stop_recording">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                <horstretch>0</horstretch>
@@ -67,7 +67,7 @@
             </widget>
            </item>
            <item row="1" column="1">
-            <widget class="QLabel" name="logging_status_flag">
+            <widget class="QLabel" name="recording_status_flag">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
                <horstretch>0</horstretch>
@@ -80,7 +80,7 @@
             </widget>
            </item>
            <item row="2" column="1">
-            <widget class="QPushButton" name="button_start_logging">
+            <widget class="QPushButton" name="button_start_recording">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                <horstretch>0</horstretch>
@@ -359,7 +359,7 @@
   </action>
  </widget>
  <resources>
-  <include location="../../qt_recorder/resources/images.qrc"/>
+  <include location="../resources/images.qrc"/>
  </resources>
  <connections>
   <connection>

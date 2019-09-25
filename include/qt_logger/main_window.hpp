@@ -1,12 +1,12 @@
 /**
- * @file /include/qt_recorder/main_window.hpp
+ * @file /include/qt_logger/main_window.hpp
  *
- * @brief Qt based gui for qt_recorder.
+ * @brief Qt based gui for qt_logger.
  *
  * @date November 2010
  **/
-#ifndef qt_recorder_MAIN_WINDOW_H
-#define qt_recorder_MAIN_WINDOW_H
+#ifndef qt_logger_MAIN_WINDOW_H
+#define qt_logger_MAIN_WINDOW_H
 
 /*****************************************************************************
 ** Includes
@@ -25,7 +25,7 @@
 ** Namespace
 *****************************************************************************/
 
-namespace qt_recorder {
+namespace qt_logger {
 
 /*****************************************************************************
 ** Interface [MainWindow]
@@ -51,7 +51,8 @@ public:
         QString savedir_path;
         QString filename = "/test.bag";
         QString savedir_default_path = QDir::homePath() + "/ROS_bags";
-        QStringList topic_list;
+        QStringList curr_topics;
+        QStringList all_topics;
 
 public Q_SLOTS:
 	/******************************************
@@ -60,11 +61,13 @@ public Q_SLOTS:
 	void on_actionAbout_triggered();
 
             void on_button_browse_dir_clicked(bool check );
-            void on_button_start_recording_clicked(bool check );
-            void on_button_stop_recording_clicked(bool check );
+            void on_button_start_logging_clicked(bool check );
+            void on_button_stop_logging_clicked(bool check );
             void on_button_save_new_dir_clicked(bool check );
-            void on_button_refresh_topic_clicked(bool check );
+            void on_button_refresh_current_clicked(bool check );
+            void on_button_refresh_all_clicked(bool check );
             void on_button_update_topic_clicked(bool check );
+            void on_button_reset_topic_clicked(bool check);
     /******************************************
     ** Manual connections
     *******************************************/
@@ -79,6 +82,6 @@ private:
 
 };
 
-}  // namespace qt_recorder
+}  // namespace qt_logger
 
-#endif // qt_recorder_MAIN_WINDOW_H
+#endif // qt_logger_MAIN_WINDOW_H
