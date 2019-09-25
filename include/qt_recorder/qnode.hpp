@@ -70,14 +70,19 @@ public:
         Running
     } state;
 
-    ros::master::V_TopicInfo topic_infos
-    ;
+    ros::master::V_TopicInfo topic_infos;
+    
     void start_recording();
     void stop_recording();
 
     void set_savefile(QString filename);
     void set_topics(std::vector<std::string> new_topics);
-    QStringList query_topics();
+    void _set_subscription(std::vector<std::string> new_topics);
+
+    QStringList query_curr_topics();
+    QStringList query_all_topics();
+    std::vector<std::string> topic_list = {"/mocap/UAV0"};
+    
 
 Q_SIGNALS:
     void rosLoopUpdate();
@@ -91,7 +96,6 @@ private:
 
     qt_recorder::Mocap mocap[3];
     std::vector<ros::Subscriber> sub;
-    std::vector<std::string> topic_list;
     ros::Subscriber mocapUAV0;
     ros::Subscriber mocapUAV1;
     ros::Subscriber mocapPayload;

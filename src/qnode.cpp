@@ -56,12 +56,12 @@ bool QNode::init()
 
 	// Add your ros communications here.
 	// Default Topics
-	sub.push_back(n.subscribe("/mocap/UAV0", 1000, &QNode::_write_msg, this));
-	sub.push_back(n.subscribe("/mocap/UAV1", 1000, &QNode::_write_msg, this));
-
+	for (const auto &topic : topic_list)
+	{
+		sub.push_back(n.subscribe(topic, 1000, &QNode::_write_msg, this));
+	}
 	start();
 	state = Stopped;
-
 	return true;
 }
 
@@ -82,23 +82,23 @@ void QNode::run()
 	Q_EMIT rosShutdown(); // used to signal the gui for a shutdown (useful to roslaunch)
 }
 
-void QNode::_write_msg(const ros::MessageEvent<topic_tools::ShapeShifter const> &event)
-{
-	if ( state == Running )
-	{
-		ros::M_string &header = event.getConnectionHeader();
-		const topic_tools::ShapeShifter::ConstPtr &msg = event.getMessage();
-		bag.write(header["topic"], ros::Time::now(), msg);
-	}
-}
-
-QStringList QNode::query_topics()
+QStringList QNode::query_all_topics()
 {
 	ros::master::getTopics(topic_infos);
 	QStringList topic_names;
-	for (const auto & topic : topic_infos)
+	for (const auto &topic : topic_infos)
 	{
-		topic_names+=QString::fromStdString(topic.name);
+		topic_names += QString::fromStdString(topic.name);
+	}
+	return topic_names;
+}
+
+QStringList QNode::query_curr_topics()
+{
+	QStringList topic_names;
+	for (const auto &topic : topic_list)
+	{
+		topic_names += QString::fromStdString(topic);
 	}
 	return topic_names;
 }
@@ -106,13 +106,7 @@ QStringList QNode::query_topics()
 void QNode::set_topics(std::vector<std::string> new_topics)
 {
 	topic_list.insert(topic_list.end(), new_topics.begin(), new_topics.end());
-
-	auto end = topic_list.end();
-	for (auto i = topic_list.begin(); i != end; ++i) {
-		end = std::remove(i + 1, end, *i);
-	}
-
-	topic_list.erase(end, topic_list.end());
+	_set_subscription(new_topics);
 }
 
 void QNode::start_recording()
@@ -132,6 +126,34 @@ void QNode::set_savefile(QString filename)
 	savefile = filename.toStdString();
 }
 
+void QNode::_write_msg(const ros::MessageEvent<topic_tools::ShapeShifter const> &event)
+{
+	if (state == Running)
+	{
+		ros::M_string &header = event.getConnectionHeader();
+		const topic_tools::ShapeShifter::ConstPtr &msg = event.getMessage();
+		bag.write(header["topic"], ros::Time::now(), msg);
+	}
+}
 
+void QNode::_set_subscription(std::vector<std::string> new_topics)
+{
+	ros::NodeHandle n;
+
+	if (new_topics.empty())
+	{
+		sub.clear();
+		topic_list.clear();
+		topic_list.push_back("clock");
+		sub.push_back(n.subscribe("clock", 1000, &QNode::_write_msg, this));
+	}
+	else
+	{
+		for (const auto topic : new_topics)
+		{
+			sub.push_back(n.subscribe(topic, 1000, &QNode::_write_msg, this));
+		}
+	}
+}
 
 } // namespace qt_recorder

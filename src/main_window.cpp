@@ -58,6 +58,8 @@ MainWindow::MainWindow(int argc, char **argv, QWidget *parent)
         savedir_default.mkpath(savedir_default_path);
     }
 
+	curr_topics = qnode.query_curr_topics();
+
     filename = savedir_default_path + filename;
     qnode.set_savefile(filename);
 
@@ -65,6 +67,7 @@ MainWindow::MainWindow(int argc, char **argv, QWidget *parent)
     ui.button_save_new_dir->setEnabled(false);
     ui.save_location_flag->setText("Saving ROS bags to " + savedir_default_path);
     ui.new_location_flag->setText("<font color='green'>Using default save location</font>");
+
 }
 
 MainWindow::~MainWindow() {}
@@ -153,22 +156,54 @@ void MainWindow::on_button_save_new_dir_clicked(bool check)
     ui.button_save_new_dir->setEnabled(false);
 }
 
-void MainWindow::on_button_refresh_topic_clicked(bool check)
+void MainWindow::on_button_refresh_current_clicked(bool check)
 {
-    topic_list = qnode.query_topics();
-    ui.list_topics->addItems( topic_list );
+    ui.list_topics->clear();
+    curr_topics = qnode.query_curr_topics();
+    ui.list_topics->addItems(curr_topics);
+}
+
+void MainWindow::on_button_refresh_all_clicked(bool check)
+{
+    ui.list_topics->clear();
+    all_topics = qnode.query_all_topics();
+    ui.list_topics->addItems(all_topics);
+    for (const auto topic : curr_topics)
+    {
+        QList<QListWidgetItem*> lst =  ui.list_topics->findItems(topic, Qt::MatchContains);
+        for (const auto item : lst){
+            item->setBackground(Qt::green);
+        }
+    }
 }
 
 void MainWindow::on_button_update_topic_clicked(bool check)
 {
-    QList<QListWidgetItem*> topic_list = ui.list_topics->selectedItems();
-    ui.placeholder->setText(QString::number(topic_list.size())+QString(" topics selected."));
+    QList<QListWidgetItem *> q_topics = ui.list_topics->selectedItems();
+    ui.placeholder->setText(QString::number(q_topics.size()) + QString(" topics selected."));
     std::vector<std::string> s_topic_names;
-    for (const auto topic : topic_list) {
+
+    for (const auto topic : q_topics)
+    {
+        ui.list_topics->takeItem(ui.list_topics->row(topic));
         QString qs = topic->text();
-        s_topic_names.push_back(qs.toStdString() );
+
+        if (std::find(curr_topics.begin(), curr_topics.end(), qs) == curr_topics.end())
+        {
+            s_topic_names.push_back(qs.toStdString());
+            curr_topics+=qs;
+        }
     }
     qnode.set_topics(s_topic_names);
+}
+
+void MainWindow::on_button_reset_topic_clicked(bool check)
+{
+    std::vector<std::string> resetter = {};
+    qnode.set_topics(resetter);
+    ui.list_topics->clear();
+    curr_topics.clear();
+    curr_topics+=QString("clock");
 }
 
 /*****************************************************************************
