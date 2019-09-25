@@ -55,7 +55,7 @@ bool QNode::init()
 	ros::NodeHandle n;
 
 	// Add your ros communications here.
-	// Default Topics
+	// Add default topics
 	for (const auto &topic : topic_list)
 	{
 		sub.push_back(n.subscribe(topic, 1000, &QNode::_write_msg, this));
