@@ -62,7 +62,8 @@ public Q_SLOTS:
             void on_button_start_recording_clicked(bool check );
             void on_button_stop_recording_clicked(bool check );
             void on_button_save_new_dir_clicked(bool check );
-
+            void on_button_refresh_topic_clicked(bool check );
+            void on_button_update_topic_clicked(bool check );
     /******************************************
     ** Manual connections
     *******************************************/

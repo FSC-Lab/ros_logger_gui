@@ -10,14 +10,9 @@
 ** Includes
 *****************************************************************************/
 
-#include <ros/ros.h>
-#include <ros/master.h>
-#include <ros/network.h>
-#include <rosbag/bag.h>
-#include <rosbag/query.h>
 #include <string>
 #include <std_msgs/String.h>
-
+#include <std_msgs/Float32MultiArray.h>
 #include <sstream>
 #include "../include/qt_recorder/qnode.hpp"
 
@@ -63,9 +58,11 @@ bool QNode::init()
 
 	// Add your ros communications here.
 	// Default Topics
-	mocapUAV0 = n.subscribe<qt_recorder::Mocap>("/mocap/UAV0", 1000, &QNode::sub_mocapUAV0, this);
-	mocapUAV1 = n.subscribe<qt_recorder::Mocap>("/mocap/UAV1", 1000, &QNode::sub_mocapUAV1, this);
-	mocapPayload = n.subscribe<qt_recorder::Mocap>("/mocap/Payload", 1000, &QNode::sub_mocapPayload, this);
+	sub.push_back(n.subscribe("/mocap/UAV0", 1000, &QNode::write_msg, this));
+	sub.push_back(n.subscribe("/mocap/UAV1", 1000, &QNode::write_msg, this));
+
+	//mocapUAV1 = n.subscribe<qt_recorder::Mocap>("/mocap/UAV1", 1000, &QNode::sub_mocapUAV1, this);
+	//mocapPayload = n.subscribe<qt_recorder::Mocap>("/mocap/Payload", 1000, &QNode::sub_mocapPayload, this);
 
 	start();
 	state = Stopped;
@@ -90,33 +87,33 @@ void QNode::run()
 	Q_EMIT rosShutdown(); // used to signal the gui for a shutdown (useful to roslaunch)
 }
 
-void QNode::sub_mocapUAV0(const qt_recorder::Mocap::ConstPtr &msg)
+void QNode::write_msg(const ros::MessageEvent<topic_tools::ShapeShifter const> &event)
 {
-	mocap[0] = *msg;
+	if ( state == Running )
+	{
+		ros::M_string &header = event.getConnectionHeader();
+		const topic_tools::ShapeShifter::ConstPtr &msg = event.getMessage();
+		bag.write(header["topic"], ros::Time::now(), msg);
+	}
 }
 
-void QNode::sub_mocapUAV1(const qt_recorder::Mocap::ConstPtr &msg)
+void QNode::add_subscription()
 {
-	mocap[1] = *msg;
-}
-void QNode::sub_mocapPayload(const qt_recorder::Mocap::ConstPtr &msg)
-{
-	mocap_payload = *msg;
+	//n.subscribe<qt_recorder::Mocap>("/mocap/UAV0", 1000, &QNode::sub_mocapUAV0, this);
 }
 
 void QNode::get_topic()
 {
-	int i = 1;
-	    std::vector<std::string> lv_elems;
+	/*	int i = 1;
+	std::vector<std::string> lv_elems;
 
-    char lc_delim[2];
-    lc_delim[0] = '/';
-    lc_delim[1] = '\0';
+	char lc_delim[2];
+	lc_delim[0] = '/';
+	lc_delim[1] = '\0';
 
-    boost::algorithm::split( lv_elems, topic_infos[0].name, boost::algorithm::is_any_of( lc_delim ) );
+	//boost::algorithm::split(lv_elems, topic_infos[0].name, boost::algorithm::is_any_of(lc_delim));
 
-    if ( lv_elems[0] == "vicon" )
-	
+	if (lv_elems[0] == "vicon")*/
 }
 
 void QNode::start_recording()
@@ -136,36 +133,6 @@ void QNode::set_savefile(QString filename)
 	savefile = filename.toStdString();
 }
 
-void QNode::update_recording()
-{
-	if (state == Running)
-	{
-		write_multi_topic(mocap, "mocap");
-	}
-}
 
-
-
-void QNode::write_multi_topic(auto &topic, std::string tag)
-{
-	int topic_id = 1;
-	for (const auto &_subtopic : topic)
-	{
-		write_topic(_subtopic, tag+std::to_string(topic_id));
-		topic_id++;
-	}
-}
-
-void QNode::write_topic(auto _topic, std::string tag)
-{
-	bag.write(tag, ros::Time::now(), _topic);
-}
-
-void QNode::_write_float32_multiarray3(auto raw_msg, std::string tag)
-{
-	std_msgs::Float32MultiArray _msg;
-	_msg.data.insert(_msg.data.begin(), raw_msg.begin(), raw_msg.end());
-	bag.write(tag, ros::Time::now(), _msg);
-}
 
 } // namespace qt_recorder

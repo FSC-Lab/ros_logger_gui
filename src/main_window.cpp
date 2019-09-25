@@ -160,6 +160,14 @@ void MainWindow::on_button_save_new_dir_clicked(bool check)
     ui.button_save_new_dir->setEnabled(false);
 }
 
+void MainWindow::on_button_refresh_topic_clicked(bool check)
+{
+}
+
+void MainWindow::on_button_update_topic_clicked(bool check)
+{
+}
+
 /*****************************************************************************
 ** Implementation [Configuration]
 *****************************************************************************/
