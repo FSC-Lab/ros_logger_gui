@@ -58,7 +58,6 @@ public:
     QNode(int argc, char **argv);
     virtual ~QNode();
     bool init();
-    bool init(const std::string &master_url, const std::string &host_url);
     void run();
 
     /*********************
@@ -71,14 +70,14 @@ public:
         Running
     } state;
 
-    qt_recorder::Mocap GetMocap(int ID);
-
+    ros::master::V_TopicInfo topic_infos
+    ;
     void start_recording();
     void stop_recording();
-    void update_recording();
+
     void set_savefile(QString filename);
-    void get_topic();
-    void add_subscription();
+    void set_topics(std::vector<std::string> new_topics);
+    QStringList query_topics();
 
 Q_SIGNALS:
     void rosLoopUpdate();
@@ -91,17 +90,15 @@ private:
     std::string savefile;
 
     qt_recorder::Mocap mocap[3];
-
     std::vector<ros::Subscriber> sub;
-
+    std::vector<std::string> topic_list;
     ros::Subscriber mocapUAV0;
     ros::Subscriber mocapUAV1;
     ros::Subscriber mocapPayload;
 
-    void write_msg(const ros::MessageEvent<topic_tools::ShapeShifter const>& event);
+    void _write_msg(const ros::MessageEvent<topic_tools::ShapeShifter const> &event);
 
     rosbag::Bag bag;
-
 };
 
 } // namespace qt_recorder

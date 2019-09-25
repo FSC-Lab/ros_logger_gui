@@ -46,7 +46,6 @@ MainWindow::MainWindow(int argc, char **argv, QWidget *parent)
     **********************/
     QObject::connect(&qnode, SIGNAL(rosShutdown()), this, SLOT(close()));
     QObject::connect(&qnode, SIGNAL(rosLoopUpdate()), this, SLOT(updateRecordingState()));
-    QObject::connect(&qnode, SIGNAL(rosLoopUpdate()), this, SLOT(updateRecording()));
 
     /*********************
     ** Auto Start
@@ -93,7 +92,6 @@ void MainWindow::on_actionAbout_triggered()
 
 void MainWindow::updateRecordingState()
 {
-    std::cout << qnode.state;
     switch (qnode.state)
     {
     case STOPPED:
@@ -107,11 +105,6 @@ void MainWindow::updateRecordingState()
         ui.button_stop_recording->setEnabled(true);
         break;
     }
-}
-
-void MainWindow::updateRecording()
-{
-    qnode.update_recording();
 }
 
 /*****************************************************************************
@@ -162,10 +155,20 @@ void MainWindow::on_button_save_new_dir_clicked(bool check)
 
 void MainWindow::on_button_refresh_topic_clicked(bool check)
 {
+    topic_list = qnode.query_topics();
+    ui.list_topics->addItems( topic_list );
 }
 
 void MainWindow::on_button_update_topic_clicked(bool check)
 {
+    QList<QListWidgetItem*> topic_list = ui.list_topics->selectedItems();
+    ui.placeholder->setText(QString::number(topic_list.size())+QString(" topics selected."));
+    std::vector<std::string> s_topic_names;
+    for (const auto topic : topic_list) {
+        QString qs = topic->text();
+        s_topic_names.push_back(qs.toStdString() );
+    }
+    qnode.set_topics(s_topic_names);
 }
 
 /*****************************************************************************

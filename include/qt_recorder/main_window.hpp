@@ -14,6 +14,7 @@
 
 #include <QtGui/QMainWindow>
 #include <QFileDialog>
+#include <QAbstractItemView>
 #include "ui_main_window.h"
 #include "qnode.hpp"
 
@@ -50,7 +51,7 @@ public:
         QString savedir_path;
         QString filename = "/test.bag";
         QString savedir_default_path = QDir::homePath() + "/ROS_bags";
-
+        QStringList topic_list;
 
 public Q_SLOTS:
 	/******************************************
@@ -68,13 +69,11 @@ public Q_SLOTS:
     ** Manual connections
     *******************************************/
     void updateRecordingState();
-    void updateRecording();
 
 Q_SIGNALS:
 
 
 private:
-
         Ui::MainWindowDesign ui;
         QNode qnode;
 

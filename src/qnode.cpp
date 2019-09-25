@@ -54,15 +54,10 @@ bool QNode::init()
 	ros::start(); // explicitly needed since our nodehandle is going out of scope.
 	ros::NodeHandle n;
 
-	ros::master::getTopics(topic_infos);
-
 	// Add your ros communications here.
 	// Default Topics
-	sub.push_back(n.subscribe("/mocap/UAV0", 1000, &QNode::write_msg, this));
-	sub.push_back(n.subscribe("/mocap/UAV1", 1000, &QNode::write_msg, this));
-
-	//mocapUAV1 = n.subscribe<qt_recorder::Mocap>("/mocap/UAV1", 1000, &QNode::sub_mocapUAV1, this);
-	//mocapPayload = n.subscribe<qt_recorder::Mocap>("/mocap/Payload", 1000, &QNode::sub_mocapPayload, this);
+	sub.push_back(n.subscribe("/mocap/UAV0", 1000, &QNode::_write_msg, this));
+	sub.push_back(n.subscribe("/mocap/UAV1", 1000, &QNode::_write_msg, this));
 
 	start();
 	state = Stopped;
@@ -87,7 +82,7 @@ void QNode::run()
 	Q_EMIT rosShutdown(); // used to signal the gui for a shutdown (useful to roslaunch)
 }
 
-void QNode::write_msg(const ros::MessageEvent<topic_tools::ShapeShifter const> &event)
+void QNode::_write_msg(const ros::MessageEvent<topic_tools::ShapeShifter const> &event)
 {
 	if ( state == Running )
 	{
@@ -97,23 +92,27 @@ void QNode::write_msg(const ros::MessageEvent<topic_tools::ShapeShifter const> &
 	}
 }
 
-void QNode::add_subscription()
+QStringList QNode::query_topics()
 {
-	//n.subscribe<qt_recorder::Mocap>("/mocap/UAV0", 1000, &QNode::sub_mocapUAV0, this);
+	ros::master::getTopics(topic_infos);
+	QStringList topic_names;
+	for (const auto & topic : topic_infos)
+	{
+		topic_names+=QString::fromStdString(topic.name);
+	}
+	return topic_names;
 }
 
-void QNode::get_topic()
+void QNode::set_topics(std::vector<std::string> new_topics)
 {
-	/*	int i = 1;
-	std::vector<std::string> lv_elems;
+	topic_list.insert(topic_list.end(), new_topics.begin(), new_topics.end());
 
-	char lc_delim[2];
-	lc_delim[0] = '/';
-	lc_delim[1] = '\0';
+	auto end = topic_list.end();
+	for (auto i = topic_list.begin(); i != end; ++i) {
+		end = std::remove(i + 1, end, *i);
+	}
 
-	//boost::algorithm::split(lv_elems, topic_infos[0].name, boost::algorithm::is_any_of(lc_delim));
-
-	if (lv_elems[0] == "vicon")*/
+	topic_list.erase(end, topic_list.end());
 }
 
 void QNode::start_recording()
