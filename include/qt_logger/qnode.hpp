@@ -1,5 +1,5 @@
 /**
- * @file /include/qt_recorder/qnode.hpp
+ * @file /include/qt_logger/qnode.hpp
  *
  * @brief Communications central!
  *
@@ -9,8 +9,8 @@
 ** Ifdefs
 *****************************************************************************/
 
-#ifndef qt_recorder_QNODE_HPP_
-#define qt_recorder_QNODE_HPP_
+#ifndef qt_logger_QNODE_HPP_
+#define qt_logger_QNODE_HPP_
 
 /*****************************************************************************
 ** Includes
@@ -32,24 +32,19 @@
 #include <string>
 #include <QThread>
 #include <QStringListModel>
-#include <qt_recorder/Mocap.h>
-#include <qt_recorder/Topic_for_log.h>
+#include <qt_logger/Mocap.h>
+#include <qt_logger/Topic_for_log.h>
 
 /*****************************************************************************
 ** Namespaces
 *****************************************************************************/
 
-namespace qt_recorder
+namespace qt_logger
 {
 
 /*****************************************************************************
 ** Class
 *****************************************************************************/
-
-struct uav_record
-{
-    qt_recorder::Topic_for_log log;
-};
 
 class QNode : public QThread
 {
@@ -61,10 +56,10 @@ public:
     void run();
 
     /*********************
-	** Recording
+	** Logging
 	**********************/
 
-    enum RecordingState
+    enum LoggingState
     {
         Stopped,
         Running
@@ -72,8 +67,8 @@ public:
 
     ros::master::V_TopicInfo topic_infos;
     
-    void start_recording();
-    void stop_recording();
+    void start_logging();
+    void stop_logging();
 
     void set_savefile(QString filename);
     void set_topics(std::vector<std::string> new_topics);
@@ -94,7 +89,7 @@ private:
 
     std::string savefile;
 
-    qt_recorder::Mocap mocap[3];
+    qt_logger::Mocap mocap[3];
     std::vector<ros::Subscriber> sub;
     ros::Subscriber mocapUAV0;
     ros::Subscriber mocapUAV1;
@@ -105,6 +100,6 @@ private:
     rosbag::Bag bag;
 };
 
-} // namespace qt_recorder
+} // namespace qt_logger
 
 #endif

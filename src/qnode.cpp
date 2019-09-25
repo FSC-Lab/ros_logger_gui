@@ -14,7 +14,7 @@
 #include <std_msgs/String.h>
 #include <std_msgs/Float32MultiArray.h>
 #include <sstream>
-#include "../include/qt_recorder/qnode.hpp"
+#include "../include/qt_logger/qnode.hpp"
 
 #define VARNAME(Var) (#Var)
 
@@ -22,7 +22,7 @@
 ** Namespaces
 *****************************************************************************/
 
-namespace qt_recorder
+namespace qt_logger
 {
 
 /*****************************************************************************
@@ -46,7 +46,7 @@ QNode::~QNode()
 
 bool QNode::init()
 {
-	ros::init(init_argc, init_argv, "qt_recorder");
+	ros::init(init_argc, init_argv, "qt_logger");
 	if (!ros::master::check())
 	{
 		return false;
@@ -109,13 +109,13 @@ void QNode::set_topics(std::vector<std::string> new_topics)
 	_set_subscription(new_topics);
 }
 
-void QNode::start_recording()
+void QNode::start_logging()
 {
 	bag.open(savefile, rosbag::bagmode::Write);
 	state = Running;
 }
 
-void QNode::stop_recording()
+void QNode::stop_logging()
 {
 	bag.close();
 	state = Stopped;
@@ -156,4 +156,4 @@ void QNode::_set_subscription(std::vector<std::string> new_topics)
 	}
 }
 
-} // namespace qt_recorder
+} // namespace qt_logger

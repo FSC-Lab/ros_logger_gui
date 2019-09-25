@@ -14,13 +14,13 @@
 #include <QDir>
 #include <QMessageBox>
 #include <iostream>
-#include "../include/qt_recorder/main_window.hpp"
+#include "../include/qt_logger/main_window.hpp"
 
 /*****************************************************************************
 ** Namespaces
 *****************************************************************************/
 
-namespace qt_recorder
+namespace qt_logger
 {
 
 using namespace Qt;
@@ -98,14 +98,14 @@ void MainWindow::updateRecordingState()
     switch (qnode.state)
     {
     case STOPPED:
-        ui.recording_status_flag->setText("<font color='red'>Data recording stopped</font>");
-        ui.button_start_recording->setEnabled(true);
-        ui.button_stop_recording->setEnabled(false);
+        ui.logging_status_flag->setText("<font color='red'>Data logging stopped</font>");
+        ui.button_start_logging->setEnabled(true);
+        ui.button_stop_logging->setEnabled(false);
         break;
     case RUNNING:
-        ui.recording_status_flag->setText("<font color='green'>Data recording running</font>");
-        ui.button_start_recording->setEnabled(false);
-        ui.button_stop_recording->setEnabled(true);
+        ui.logging_status_flag->setText("<font color='green'>Data logging running</font>");
+        ui.button_start_logging->setEnabled(false);
+        ui.button_stop_logging->setEnabled(true);
         break;
     }
 }
@@ -126,16 +126,16 @@ void MainWindow::on_button_browse_dir_clicked(bool check)
     ui.button_save_new_dir->setEnabled(true);
 }
 
-void MainWindow::on_button_start_recording_clicked(bool check)
+void MainWindow::on_button_start_logging_clicked(bool check)
 {
     filename = ui.line_edit_directory->text();
     qnode.set_savefile(filename);
-    qnode.start_recording();
+    qnode.start_logging();
 }
 
-void MainWindow::on_button_stop_recording_clicked(bool check)
+void MainWindow::on_button_stop_logging_clicked(bool check)
 {
-    qnode.stop_recording();
+    qnode.stop_logging();
 }
 
 void MainWindow::on_button_save_new_dir_clicked(bool check)
@@ -230,4 +230,4 @@ void MainWindow::closeEvent(QCloseEvent *event)
     QMainWindow::closeEvent(event);
 }
 
-} // namespace qt_recorder
+} // namespace qt_logger
