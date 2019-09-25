@@ -12,7 +12,6 @@
 
 #include <string>
 #include <std_msgs/String.h>
-#include <std_msgs/Float32MultiArray.h>
 #include <sstream>
 #include "../include/qt_logger/qnode.hpp"
 
@@ -49,25 +48,31 @@ bool QNode::init()
 	ros::init(init_argc, init_argv, "qt_logger");
 	if (!ros::master::check())
 	{
+		state = Unstarted;
 		return false;
+	}
+	else
+	{
+		state = Stopped;
 	}
 	ros::start(); // explicitly needed since our nodehandle is going out of scope.
 	ros::NodeHandle n;
 
 	// Add your ros communications here.
-	// Default Topics
+	// Add default topics
 	for (const auto &topic : topic_list)
 	{
 		sub.push_back(n.subscribe(topic, 1000, &QNode::_write_msg, this));
 	}
+
 	start();
-	state = Stopped;
 	return true;
 }
 
 void QNode::run()
 {
 	ros::Rate loop_rate(4);
+
 	while (ros::ok())
 	{
 		ros::spinOnce();

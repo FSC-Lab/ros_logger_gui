@@ -32,8 +32,6 @@
 #include <string>
 #include <QThread>
 #include <QStringListModel>
-#include <qt_logger/Mocap.h>
-#include <qt_logger/Topic_for_log.h>
 
 /*****************************************************************************
 ** Namespaces
@@ -61,6 +59,7 @@ public:
 
     enum LoggingState
     {
+        Unstarted,
         Stopped,
         Running
     } state;
@@ -69,14 +68,12 @@ public:
     
     void start_logging();
     void stop_logging();
-
     void set_savefile(QString filename);
     void set_topics(std::vector<std::string> new_topics);
-    void _set_subscription(std::vector<std::string> new_topics);
 
     QStringList query_curr_topics();
     QStringList query_all_topics();
-    std::vector<std::string> topic_list = {"/mocap/UAV0"};
+    std::vector<std::string> topic_list = {"clock"};
     
 
 Q_SIGNALS:
@@ -88,13 +85,8 @@ private:
     char **init_argv;
 
     std::string savefile;
-
-    qt_logger::Mocap mocap[3];
     std::vector<ros::Subscriber> sub;
-    ros::Subscriber mocapUAV0;
-    ros::Subscriber mocapUAV1;
-    ros::Subscriber mocapPayload;
-
+    void _set_subscription(std::vector<std::string> new_topics);
     void _write_msg(const ros::MessageEvent<topic_tools::ShapeShifter const> &event);
 
     rosbag::Bag bag;

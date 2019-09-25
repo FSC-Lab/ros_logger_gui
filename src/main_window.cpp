@@ -41,6 +41,8 @@ MainWindow::MainWindow(int argc, char **argv, QWidget *parent)
 
     bool init_ros_ok = qnode.init();
 
+    updateRecordingState();
+
     /*********************
     ** Logging
     **********************/
@@ -58,7 +60,7 @@ MainWindow::MainWindow(int argc, char **argv, QWidget *parent)
         savedir_default.mkpath(savedir_default_path);
     }
 
-	curr_topics = qnode.query_curr_topics();
+    curr_topics = qnode.query_curr_topics();
 
     filename = savedir_default_path + filename;
     qnode.set_savefile(filename);
@@ -67,7 +69,6 @@ MainWindow::MainWindow(int argc, char **argv, QWidget *parent)
     ui.button_save_new_dir->setEnabled(false);
     ui.save_location_flag->setText("Saving ROS bags to " + savedir_default_path);
     ui.new_location_flag->setText("<font color='green'>Using default save location</font>");
-
 }
 
 MainWindow::~MainWindow() {}
@@ -97,15 +98,32 @@ void MainWindow::updateRecordingState()
 {
     switch (qnode.state)
     {
+    case UNSTARTED:
+        ui.logging_status_flag->setText("<font color='red'>ROS is not started</font>");
+        ui.button_start_logging->setEnabled(false);
+        ui.button_stop_logging->setEnabled(false);
+        ui.button_refresh_current->setEnabled(false);
+        ui.button_refresh_all->setEnabled(false);
+        ui.button_update_topic->setEnabled(false);
+        ui.button_reset_topic->setEnabled(false);
+        break;
     case STOPPED:
         ui.logging_status_flag->setText("<font color='red'>Data logging stopped</font>");
         ui.button_start_logging->setEnabled(true);
         ui.button_stop_logging->setEnabled(false);
+        ui.button_refresh_current->setEnabled(true);
+        ui.button_refresh_all->setEnabled(true);
+        ui.button_update_topic->setEnabled(true);
+        ui.button_reset_topic->setEnabled(true);
         break;
     case RUNNING:
         ui.logging_status_flag->setText("<font color='green'>Data logging running</font>");
         ui.button_start_logging->setEnabled(false);
         ui.button_stop_logging->setEnabled(true);
+        ui.button_refresh_current->setEnabled(true);
+        ui.button_refresh_all->setEnabled(true);
+        ui.button_update_topic->setEnabled(true);
+        ui.button_reset_topic->setEnabled(true);
         break;
     }
 }
@@ -124,6 +142,19 @@ void MainWindow::on_button_browse_dir_clicked(bool check)
     ui.new_location_flag->setText("<font color='red'>Save location changed!</font>");
     ui.line_edit_directory->setText(filename);
     ui.button_save_new_dir->setEnabled(true);
+}
+
+void MainWindow::on_button_refresh_state_clicked(bool check)
+{
+    if (qnode.state == UNSTARTED)
+    {
+        qnode.init();
+    }
+    else if (qnode.state != UNSTARTED)
+    {
+
+    }
+    updateRecordingState();
 }
 
 void MainWindow::on_button_start_logging_clicked(bool check)
@@ -170,8 +201,9 @@ void MainWindow::on_button_refresh_all_clicked(bool check)
     ui.list_topics->addItems(all_topics);
     for (const auto topic : curr_topics)
     {
-        QList<QListWidgetItem*> lst =  ui.list_topics->findItems(topic, Qt::MatchContains);
-        for (const auto item : lst){
+        QList<QListWidgetItem *> lst = ui.list_topics->findItems(topic, Qt::MatchContains);
+        for (const auto item : lst)
+        {
             item->setBackground(Qt::green);
         }
     }
@@ -191,7 +223,7 @@ void MainWindow::on_button_update_topic_clicked(bool check)
         if (std::find(curr_topics.begin(), curr_topics.end(), qs) == curr_topics.end())
         {
             s_topic_names.push_back(qs.toStdString());
-            curr_topics+=qs;
+            curr_topics += qs;
         }
     }
     qnode.set_topics(s_topic_names);
@@ -203,7 +235,7 @@ void MainWindow::on_button_reset_topic_clicked(bool check)
     qnode.set_topics(resetter);
     ui.list_topics->clear();
     curr_topics.clear();
-    curr_topics+=QString("clock");
+    curr_topics += QString("clock");
 }
 
 /*****************************************************************************

@@ -28,26 +28,6 @@ mavros_msgs
 rosbag
 )
 
-## Generate messages in the 'msg' folder
-add_message_files(
-  DIRECTORY msg
-  FILES
-  ControlCommand.msg
-  TrajectoryPoint.msg
-  Trajectory.msg
-  AttitudeReference.msg
-  DroneState.msg
-  Topic_for_log.msg
-  ControlOutput.msg
-  Mocap.msg
-)
-
-generate_messages(
-  DEPENDENCIES
-  geometry_msgs
-  sensor_msgs
-  std_msgs
-)
 
 catkin_package(
   INCLUDE_DIRS include

@@ -14,7 +14,7 @@
    <string>QRosApp</string>
   </property>
   <property name="windowIcon">
-   <iconset resource="../../qt_recorder/resources/images.qrc">
+   <iconset resource="../resources/images.qrc">
     <normaloff>:/images/icon.png</normaloff>:/images/icon.png</iconset>
   </property>
   <property name="locale">
@@ -92,6 +92,13 @@
              </property>
             </widget>
            </item>
+           <item row="4" column="1">
+            <widget class="QPushButton" name="button_refresh_state">
+             <property name="text">
+              <string>Refresh</string>
+             </property>
+            </widget>
+           </item>
           </layout>
          </widget>
         </item>
@@ -161,19 +168,6 @@
              </property>
             </widget>
            </item>
-           <item row="0" column="0" colspan="2">
-            <widget class="QLabel" name="save_location_flag">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="text">
-              <string>Bags are currently saved to: </string>
-             </property>
-            </widget>
-           </item>
            <item row="2" column="3">
             <widget class="QPushButton" name="button_save_new_dir">
              <property name="sizePolicy">
@@ -197,6 +191,19 @@
              </property>
              <property name="text">
               <string>TextLabel</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="0" colspan="3">
+            <widget class="QLabel" name="save_location_flag">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="text">
+              <string>Bags are currently saved to: </string>
              </property>
             </widget>
            </item>
@@ -273,7 +280,7 @@
            <item row="4" column="0">
             <widget class="QLabel" name="placeholder">
              <property name="text">
-              <string>TextLabel</string>
+              <string>Default topics</string>
              </property>
             </widget>
            </item>
@@ -359,7 +366,7 @@
   </action>
  </widget>
  <resources>
-  <include location="../../qt_recorder/resources/images.qrc"/>
+  <include location="../resources/images.qrc"/>
  </resources>
  <connections>
   <connection>

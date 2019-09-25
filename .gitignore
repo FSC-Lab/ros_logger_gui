@@ -3,8 +3,7 @@
 
 # Don't track content of these folders
 node_modules/
-someOtherfoler/
-
+msg/
 
 # Compiled source #
 ###################
@@ -29,3 +28,4 @@ someOtherfoler/
 *.rar
 *.tar
 *.zip
+
