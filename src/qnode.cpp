@@ -12,7 +12,6 @@
 
 #include <string>
 #include <std_msgs/String.h>
-#include <std_msgs/Float32MultiArray.h>
 #include <sstream>
 #include "../include/qt_logger/qnode.hpp"
 
