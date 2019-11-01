@@ -1,0 +1,7 @@
+<launch>
+    <!-- Launch recorder node -->
+
+    <node pkg="ros_logger_gui" type="ros_logger_gui" name="ros_logger_gui" output="screen">
+            <rosparam command="load" file="$(find ros_logger_gui)/config/topics.yaml" />
+	</node>
+</launch>
