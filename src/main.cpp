@@ -11,7 +11,7 @@
 
 #include <QtGui>
 #include <QApplication>
-#include "../include/qt_logger/main_window.hpp"
+#include "../include/ros_logger_gui/main_window.hpp"
 
 /*****************************************************************************
 ** Main
@@ -23,7 +23,7 @@ int main(int argc, char **argv) {
     ** Qt
     **********************/
     QApplication app(argc, argv);
-    qt_logger::MainWindow w(argc,argv);
+    ros_logger_gui::MainWindow w(argc,argv);
     w.show();
     app.connect(&app, SIGNAL(lastWindowClosed()), &app, SLOT(quit()));
     int result = app.exec();

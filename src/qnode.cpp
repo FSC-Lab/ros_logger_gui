@@ -10,18 +10,14 @@
 ** Includes
 *****************************************************************************/
 
-#include <string>
-#include <std_msgs/String.h>
 #include <sstream>
-#include "../include/qt_logger/qnode.hpp"
-
-#define VARNAME(Var) (#Var)
+#include "../include/ros_logger_gui/qnode.hpp"
 
 /*****************************************************************************
 ** Namespaces
 *****************************************************************************/
 
-namespace qt_logger
+namespace ros_logger_gui
 {
 
 /*****************************************************************************
@@ -45,7 +41,7 @@ QNode::~QNode()
 
 bool QNode::init()
 {
-	ros::init(init_argc, init_argv, "qt_logger");
+	ros::init(init_argc, init_argv, "ros_logger_gui");
 	if (!ros::master::check())
 	{
 		state = Unstarted;
@@ -53,19 +49,20 @@ bool QNode::init()
 	}
 	else
 	{
-		state = Stopped;
+		ros::start(); // explicitly needed since our nodehandle is going out of scope.
 	}
-	ros::start(); // explicitly needed since our nodehandle is going out of scope.
 	ros::NodeHandle n;
 
 	// Add your ros communications here.
 	// Add default topics
-	for (const auto &topic : topic_list)
+
+	get_configured_topics();
+
+	for (const auto &topic : sub_topics)
 	{
-		sub.push_back(n.subscribe(topic, 1000, &QNode::_write_msg, this));
+		sub.push_back(n.subscribe(topic, 1000, &QNode::write_msg, this));
 	}
 
-	start();
 	return true;
 }
 
@@ -87,7 +84,13 @@ void QNode::run()
 	Q_EMIT rosShutdown(); // used to signal the gui for a shutdown (useful to roslaunch)
 }
 
-QStringList QNode::query_all_topics()
+void QNode::get_configured_topics()
+{
+	ros::NodeHandle n;
+	n.getParam("/ros_logger_gui/topics", sub_topics);
+}
+
+QStringList QNode::get_all_topics()
 {
 	ros::master::getTopics(topic_infos);
 	QStringList topic_names;
@@ -98,10 +101,10 @@ QStringList QNode::query_all_topics()
 	return topic_names;
 }
 
-QStringList QNode::query_curr_topics()
+QStringList QNode::get_curr_topics()
 {
 	QStringList topic_names;
-	for (const auto &topic : topic_list)
+	foreach (auto topic, sub_topics)
 	{
 		topic_names += QString::fromStdString(topic);
 	}
@@ -110,28 +113,40 @@ QStringList QNode::query_curr_topics()
 
 void QNode::set_topics(std::vector<std::string> new_topics)
 {
-	topic_list.insert(topic_list.end(), new_topics.begin(), new_topics.end());
-	_set_subscription(new_topics);
+	sub_topics.insert(sub_topics.end(), new_topics.begin(), new_topics.end());
+	set_subscription(new_topics);
 }
 
 void QNode::start_logging()
 {
-	bag.open(savefile, rosbag::bagmode::Write);
+
+	bag.setCompression(rosbag::compression::Uncompressed);
+	try
+	{
+		bag.open(bag_file, rosbag::bagmode::Write);
+	}
+	catch (rosbag::BagException err)
+	{
+		bag_active_ = false;
+	}
 	state = Running;
 }
 
 void QNode::stop_logging()
 {
+	if (!bag_active_)
+		return;
+	clear_subscription();
 	bag.close();
 	state = Stopped;
 }
 
 void QNode::set_savefile(QString filename)
 {
-	savefile = filename.toStdString();
+	bag_file = filename.toStdString();
 }
 
-void QNode::_write_msg(const ros::MessageEvent<topic_tools::ShapeShifter const> &event)
+void QNode::write_msg(const ros::MessageEvent<topic_tools::ShapeShifter const> &event)
 {
 	if (state == Running)
 	{
@@ -141,24 +156,35 @@ void QNode::_write_msg(const ros::MessageEvent<topic_tools::ShapeShifter const> 
 	}
 }
 
-void QNode::_set_subscription(std::vector<std::string> new_topics)
+void QNode::clear_subscription()
+{
+	foreach (auto _sub, sub)
+	{
+		_sub.shutdown();
+	}
+	sub.clear();
+}
+
+void QNode::set_subscription(std::vector<std::string> new_topics)
 {
 	ros::NodeHandle n;
-
 	if (new_topics.empty())
 	{
-		sub.clear();
-		topic_list.clear();
-		topic_list.push_back("clock");
-		sub.push_back(n.subscribe("clock", 1000, &QNode::_write_msg, this));
+		clear_subscription();
+		get_configured_topics();
+		foreach (auto topic, sub_topics)
+			sub.push_back(n.subscribe(topic, 1000, &QNode::write_msg, this));
+			
+		//sub_topics.push_back("clock");
+		//sub.push_back(n.subscribe("clock", 1000, &QNode::write_msg, this));
 	}
 	else
 	{
 		for (const auto topic : new_topics)
 		{
-			sub.push_back(n.subscribe(topic, 1000, &QNode::_write_msg, this));
+			sub.push_back(n.subscribe(topic, 1000, &QNode::write_msg, this));
 		}
 	}
 }
 
-} // namespace qt_logger
+} // namespace ros_logger_gui

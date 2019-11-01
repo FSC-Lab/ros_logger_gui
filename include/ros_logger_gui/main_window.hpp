@@ -1,12 +1,12 @@
 /**
- * @file /include/qt_logger/main_window.hpp
+ * @file /include/ros_logger_gui/main_window.hpp
  *
- * @brief Qt based gui for qt_logger.
+ * @brief Qt based gui for ros_logger_gui.
  *
  * @date November 2010
  **/
-#ifndef qt_logger_MAIN_WINDOW_H
-#define qt_logger_MAIN_WINDOW_H
+#ifndef ros_logger_gui_MAIN_WINDOW_H
+#define ros_logger_gui_MAIN_WINDOW_H
 
 /*****************************************************************************
 ** Includes
@@ -26,7 +26,7 @@
 ** Namespace
 *****************************************************************************/
 
-namespace qt_logger
+namespace ros_logger_gui
 {
 
 /*****************************************************************************
@@ -57,10 +57,10 @@ public:
         QStringList all_topics;
 
 public Q_SLOTS:
+        void auto_shutdown(bool check);
         /******************************************
 	** Auto-connections (connectSlotsByName())
 	*******************************************/
-        void on_actionAbout_triggered();
 
                 void on_button_browse_dir_clicked(bool check);
                 void on_button_start_logging_clicked(bool check);
@@ -83,6 +83,6 @@ private:
         QNode qnode;
 };
 
-} // namespace qt_logger
+} // namespace ros_logger_gui
 
-#endif // qt_logger_MAIN_WINDOW_H
+#endif // ros_logger_gui_MAIN_WINDOW_H
