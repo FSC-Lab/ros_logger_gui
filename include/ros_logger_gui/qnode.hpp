@@ -1,5 +1,5 @@
 /**
- * @file /include/qt_logger/qnode.hpp
+ * @file /include/ros_logger_gui/qnode.hpp
  *
  * @brief Communications central!
  *
@@ -9,8 +9,8 @@
 ** Ifdefs
 *****************************************************************************/
 
-#ifndef qt_logger_QNODE_HPP_
-#define qt_logger_QNODE_HPP_
+#ifndef ros_logger_gui_QNODE_HPP_
+#define ros_logger_gui_QNODE_HPP_
 
 /*****************************************************************************
 ** Includes
@@ -26,18 +26,21 @@
 #include <rosbag/bag.h>
 #include <rosbag/query.h>
 #include <topic_tools/shape_shifter.h>
-#include <boost/range/combine.hpp>
+#include <boost/foreach.hpp>
 #endif
 
-#include <string>
+#include <std_msgs/String.h>
+
 #include <QThread>
 #include <QStringListModel>
+
+#define foreach BOOST_FOREACH
 
 /*****************************************************************************
 ** Namespaces
 *****************************************************************************/
 
-namespace qt_logger
+namespace ros_logger_gui
 {
 
 /*****************************************************************************
@@ -65,33 +68,36 @@ public:
     } state;
 
     ros::master::V_TopicInfo topic_infos;
-    
+
     void start_logging();
     void stop_logging();
     void set_savefile(QString filename);
     void set_topics(std::vector<std::string> new_topics);
 
-    QStringList query_curr_topics();
-    QStringList query_all_topics();
-    std::vector<std::string> topic_list = {"clock"};
-    
+    QStringList get_curr_topics();
+    QStringList get_all_topics();
+    std::vector<std::string> sub_topics;
+    void get_configured_topics();
 
 Q_SIGNALS:
     void rosLoopUpdate();
     void rosShutdown();
+    void rosLaunch();
 
 private:
     int init_argc;
     char **init_argv;
+    bool bag_active_;
 
-    std::string savefile;
     std::vector<ros::Subscriber> sub;
-    void _set_subscription(std::vector<std::string> new_topics);
-    void _write_msg(const ros::MessageEvent<topic_tools::ShapeShifter const> &event);
+    void set_subscription(std::vector<std::string> new_topics);
+    void clear_subscription();
+    void write_msg(const ros::MessageEvent<topic_tools::ShapeShifter const> &event);
 
     rosbag::Bag bag;
+    std::string bag_file;
 };
 
-} // namespace qt_logger
+} // namespace ros_logger_gui
 
 #endif

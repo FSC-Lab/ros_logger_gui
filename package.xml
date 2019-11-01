@@ -1,10 +1,10 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>qt_logger</name>
+  <name>ros_logger_gui</name>
   <version>0.1.0</version>
   <description>
 
-     qt_logger
+     ros_logger_gui
 
   </description>
   <maintainer email="hs293go@gmail.com">hs293go</maintainer>

@@ -14,13 +14,13 @@
 #include <QDir>
 #include <QMessageBox>
 #include <iostream>
-#include "../include/qt_logger/main_window.hpp"
+#include "../include/ros_logger_gui/main_window.hpp"
 
 /*****************************************************************************
 ** Namespaces
 *****************************************************************************/
 
-namespace qt_logger
+namespace ros_logger_gui
 {
 
 using namespace Qt;
@@ -47,6 +47,7 @@ MainWindow::MainWindow(int argc, char **argv, QWidget *parent)
     ** Logging
     **********************/
     QObject::connect(&qnode, SIGNAL(rosShutdown()), this, SLOT(close()));
+    QObject::connect(&qnode, SIGNAL(rosShutDown()), this, SLOT(auto_shutdown()));
     QObject::connect(&qnode, SIGNAL(rosLoopUpdate()), this, SLOT(updateRecordingState()));
 
     /*********************
@@ -60,7 +61,7 @@ MainWindow::MainWindow(int argc, char **argv, QWidget *parent)
         savedir_default.mkpath(savedir_default_path);
     }
 
-    curr_topics = qnode.query_curr_topics();
+    curr_topics = qnode.get_curr_topics();
 
     filename = savedir_default_path + filename;
     qnode.set_savefile(filename);
@@ -77,22 +78,9 @@ MainWindow::~MainWindow() {}
 ** Implementation [Slots]
 *****************************************************************************/
 
-void MainWindow::showNoMasterMessage()
-{
-    QMessageBox msgBox;
-    msgBox.setText("Couldn't find the ros master.");
-    msgBox.exec();
-    close();
-}
-
 /*****************************************************************************
 ** Implementation [Menu]
 *****************************************************************************/
-
-void MainWindow::on_actionAbout_triggered()
-{
-    QMessageBox::about(this, tr("About ..."), tr("<h2>PACKAGE_NAME Test Program 0.10</h2><p>Copyright Yujin Robot</p><p>This package needs an about description.</p>"));
-}
 
 void MainWindow::updateRecordingState()
 {
@@ -131,6 +119,12 @@ void MainWindow::updateRecordingState()
 /*****************************************************************************
 ** Implementation [Buttons]
 *****************************************************************************/
+
+void MainWindow::auto_shutdown(bool check)
+{
+    qnode.stop_logging();
+    updateRecordingState();
+}
 
 void MainWindow::on_button_browse_dir_clicked(bool check)
 {
@@ -190,14 +184,14 @@ void MainWindow::on_button_save_new_dir_clicked(bool check)
 void MainWindow::on_button_refresh_current_clicked(bool check)
 {
     ui.list_topics->clear();
-    curr_topics = qnode.query_curr_topics();
+    curr_topics = qnode.get_curr_topics();
     ui.list_topics->addItems(curr_topics);
 }
 
 void MainWindow::on_button_refresh_all_clicked(bool check)
 {
     ui.list_topics->clear();
-    all_topics = qnode.query_all_topics();
+    all_topics = qnode.get_all_topics();
     ui.list_topics->addItems(all_topics);
     for (const auto topic : curr_topics)
     {
@@ -262,4 +256,4 @@ void MainWindow::closeEvent(QCloseEvent *event)
     QMainWindow::closeEvent(event);
 }
 
-} // namespace qt_logger
+} // namespace ros_logger_gui
