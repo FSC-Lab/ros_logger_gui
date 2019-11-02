@@ -30,7 +30,9 @@ using namespace Qt;
 *****************************************************************************/
 
 MainWindow::MainWindow(int argc, char **argv, QWidget *parent)
-    : QMainWindow(parent), qnode(argc, argv)
+    : QMainWindow(parent), qnode(argc, argv),
+    filename("/test.bag"),
+    default_save_path(QDir::homePath() + "/ROS_bags")
 {
     ui.setupUi(this);                                                                    // Calling this incidentally connects all ui's triggers to on_...() callbacks in this class.
     QObject::connect(ui.actionAbout_Qt, SIGNAL(triggered(bool)), qApp, SLOT(aboutQt())); // qApp is a global variable for the application
@@ -41,34 +43,35 @@ MainWindow::MainWindow(int argc, char **argv, QWidget *parent)
 
     bool init_ros_ok = qnode.init();
 
-    updateRecordingState();
-
+    update_recstate();
+    refresh_topic();
     /*********************
     ** Logging
     **********************/
     QObject::connect(&qnode, SIGNAL(rosShutdown()), this, SLOT(close()));
     QObject::connect(&qnode, SIGNAL(rosShutDown()), this, SLOT(auto_shutdown()));
-    QObject::connect(&qnode, SIGNAL(rosLoopUpdate()), this, SLOT(updateRecordingState()));
+    QObject::connect(&qnode, SIGNAL(logStateChanged()), this, SLOT(update_recstate()));
+    QObject::connect(ui.line_edit_filter, SIGNAL(textChanged(QString)), this, SLOT(filter_topics()));
 
     /*********************
     ** Auto Start
     **********************/
 
-    QDir savedir_default(savedir_default_path);
+    QDir default_save_dir(default_save_path);
 
-    if (!savedir_default.exists())
+    if (!default_save_dir.exists())
     {
-        savedir_default.mkpath(savedir_default_path);
+        default_save_dir.mkpath(default_save_path);
     }
 
-    curr_topics = qnode.get_curr_topics();
+    subscription = qnode.get_subscription();
 
-    filename = savedir_default_path + filename;
+    filename = default_save_path + filename;
     qnode.set_savefile(filename);
 
     ui.line_edit_directory->setText(filename);
     ui.button_save_new_dir->setEnabled(false);
-    ui.save_location_flag->setText("Saving ROS bags to " + savedir_default_path);
+    ui.save_location_flag->setText("Saving ROS bags to " + default_save_path);
     ui.new_location_flag->setText("<font color='green'>Using default save location</font>");
 }
 
@@ -82,34 +85,32 @@ MainWindow::~MainWindow() {}
 ** Implementation [Menu]
 *****************************************************************************/
 
-void MainWindow::updateRecordingState()
+void MainWindow::showTopicMsg() {
+    QMessageBox msgBox;
+}
+
+void MainWindow::update_recstate()
 {
     switch (qnode.state)
     {
-    case UNSTARTED:
+    case QNode::Unstarted:
         ui.logging_status_flag->setText("<font color='red'>ROS is not started</font>");
         ui.button_start_logging->setEnabled(false);
         ui.button_stop_logging->setEnabled(false);
-        ui.button_refresh_current->setEnabled(false);
-        ui.button_refresh_all->setEnabled(false);
         ui.button_update_topic->setEnabled(false);
         ui.button_reset_topic->setEnabled(false);
         break;
-    case STOPPED:
+    case QNode::Stopped:
         ui.logging_status_flag->setText("<font color='red'>Data logging stopped</font>");
         ui.button_start_logging->setEnabled(true);
         ui.button_stop_logging->setEnabled(false);
-        ui.button_refresh_current->setEnabled(true);
-        ui.button_refresh_all->setEnabled(true);
         ui.button_update_topic->setEnabled(true);
         ui.button_reset_topic->setEnabled(true);
         break;
-    case RUNNING:
+    case QNode::Running:
         ui.logging_status_flag->setText("<font color='green'>Data logging running</font>");
         ui.button_start_logging->setEnabled(false);
         ui.button_stop_logging->setEnabled(true);
-        ui.button_refresh_current->setEnabled(true);
-        ui.button_refresh_all->setEnabled(true);
         ui.button_update_topic->setEnabled(true);
         ui.button_reset_topic->setEnabled(true);
         break;
@@ -120,19 +121,19 @@ void MainWindow::updateRecordingState()
 ** Implementation [Buttons]
 *****************************************************************************/
 
-void MainWindow::auto_shutdown(bool check)
+void MainWindow::auto_shutdown()
 {
     qnode.stop_logging();
-    updateRecordingState();
+    update_recstate();
 }
 
 void MainWindow::on_button_browse_dir_clicked(bool check)
 {
-    savedir_path = QFileDialog::getExistingDirectory(this,
+    save_path = QFileDialog::getExistingDirectory(this,
                                                      "Save to",
                                                      QDir::currentPath(),
                                                      QFileDialog::ShowDirsOnly);
-    filename = savedir_path + "/test.bag";
+    filename = save_path + "/test.bag";
     ui.new_location_flag->setText("<font color='red'>Save location changed!</font>");
     ui.line_edit_directory->setText(filename);
     ui.button_save_new_dir->setEnabled(true);
@@ -140,15 +141,12 @@ void MainWindow::on_button_browse_dir_clicked(bool check)
 
 void MainWindow::on_button_refresh_state_clicked(bool check)
 {
-    if (qnode.state == UNSTARTED)
+    bool qnode_state = false;
+    if (qnode.state == QNode::Unstarted)
     {
-        qnode.init();
+        bool qnode_state = qnode.init();
     }
-    else if (qnode.state != UNSTARTED)
-    {
-
-    }
-    updateRecordingState();
+    update_recstate();
 }
 
 void MainWindow::on_button_start_logging_clicked(bool check)
@@ -167,7 +165,7 @@ void MainWindow::on_button_save_new_dir_clicked(bool check)
 {
     qnode.set_savefile(filename);
 
-    if (QString::compare(savedir_path, savedir_default_path))
+    if (QString::compare(save_path, default_save_path))
     {
         ui.new_location_flag->setText("<font color='green'>Save location confirmed</font>");
     }
@@ -176,29 +174,44 @@ void MainWindow::on_button_save_new_dir_clicked(bool check)
         ui.new_location_flag->setText("<font color='green'>Using default save location</font>");
     }
 
-    ui.save_location_flag->setText("Saving ROS bags to " + savedir_path);
+    ui.save_location_flag->setText("Saving ROS bags to " + save_path);
 
     ui.button_save_new_dir->setEnabled(false);
 }
 
-void MainWindow::on_button_refresh_current_clicked(bool check)
+void MainWindow::filter_topics()
 {
+    QString filter = ui.line_edit_filter->text();
+    QStringList filtered_sub = subscription.filter(filter);
+    ui.list_subscription->clear();
+    ui.list_subscription->addItems(filtered_sub);
+
+    QStringList filtered_topics = topics.filter(filter);
     ui.list_topics->clear();
-    curr_topics = qnode.get_curr_topics();
-    ui.list_topics->addItems(curr_topics);
+    ui.list_topics->addItems(filtered_topics);
 }
 
-void MainWindow::on_button_refresh_all_clicked(bool check)
+void MainWindow::on_button_refresh_topic_clicked(bool check)
 {
+    refresh_topic();
+}
+
+void MainWindow::refresh_topic()
+{
+    ui.list_subscription->clear();
+    subscription = qnode.get_subscription();
+    ui.list_subscription->addItems(subscription);
+
     ui.list_topics->clear();
-    all_topics = qnode.get_all_topics();
-    ui.list_topics->addItems(all_topics);
-    for (const auto topic : curr_topics)
+    topics = qnode.get_topics();
+    ui.list_topics->addItems(topics);
+
+    for (const auto &sub : subscription)
     {
-        QList<QListWidgetItem *> lst = ui.list_topics->findItems(topic, Qt::MatchContains);
-        for (const auto item : lst)
+        QList<QListWidgetItem *> disp_topics = ui.list_topics->findItems(sub, Qt::MatchContains);
+        for (const auto topic : disp_topics)
         {
-            item->setBackground(Qt::green);
+            topic->setBackground(Qt::green);
         }
     }
 }
@@ -209,18 +222,19 @@ void MainWindow::on_button_update_topic_clicked(bool check)
     ui.placeholder->setText(QString::number(q_topics.size()) + QString(" topics selected."));
     std::vector<std::string> s_topic_names;
 
-    for (const auto topic : q_topics)
+    for (const auto &topic : q_topics)
     {
         ui.list_topics->takeItem(ui.list_topics->row(topic));
         QString qs = topic->text();
 
-        if (std::find(curr_topics.begin(), curr_topics.end(), qs) == curr_topics.end())
+        if (std::find(subscription.begin(), subscription.end(), qs) == subscription.end())
         {
             s_topic_names.push_back(qs.toStdString());
-            curr_topics += qs;
+            subscription += qs;
         }
     }
     qnode.set_topics(s_topic_names);
+    refresh_topic();
 }
 
 void MainWindow::on_button_reset_topic_clicked(bool check)
@@ -228,8 +242,7 @@ void MainWindow::on_button_reset_topic_clicked(bool check)
     std::vector<std::string> resetter = {};
     qnode.set_topics(resetter);
     ui.list_topics->clear();
-    curr_topics.clear();
-    curr_topics += QString("clock");
+    subscription.clear();
 }
 
 /*****************************************************************************

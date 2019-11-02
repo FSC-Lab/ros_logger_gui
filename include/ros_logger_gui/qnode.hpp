@@ -34,8 +34,6 @@
 #include <QThread>
 #include <QStringListModel>
 
-#define foreach BOOST_FOREACH
-
 /*****************************************************************************
 ** Namespaces
 *****************************************************************************/
@@ -74,8 +72,8 @@ public:
     void set_savefile(QString filename);
     void set_topics(std::vector<std::string> new_topics);
 
-    QStringList get_curr_topics();
-    QStringList get_all_topics();
+    QStringList get_subscription();
+    QStringList get_topics();
     std::vector<std::string> sub_topics;
     void get_configured_topics();
 
@@ -83,11 +81,13 @@ Q_SIGNALS:
     void rosLoopUpdate();
     void rosShutdown();
     void rosLaunch();
+    void logStateChanged();
+
 
 private:
     int init_argc;
     char **init_argv;
-    bool bag_active_;
+    bool bag_active_ = false;
 
     std::vector<ros::Subscriber> sub;
     void set_subscription(std::vector<std::string> new_topics);

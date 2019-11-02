@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>514</width>
-    <height>606</height>
+    <height>691</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -228,12 +228,22 @@
            <string>Topic Navigator</string>
           </property>
           <layout class="QGridLayout" name="gridLayout_4">
-           <item row="3" column="2">
+           <item row="0" column="2">
+            <widget class="QLabel" name="label">
+             <property name="text">
+              <string>Filter Text</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="4">
+            <widget class="QLineEdit" name="line_edit_filter"/>
+           </item>
+           <item row="2" column="2">
             <layout class="QGridLayout" name="gridLayout_2">
              <property name="sizeConstraint">
               <enum>QLayout::SetNoConstraint</enum>
              </property>
-             <item row="3" column="0">
+             <item row="1" column="0">
               <widget class="QPushButton" name="button_update_topic">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
@@ -246,65 +256,86 @@
                </property>
               </widget>
              </item>
-             <item row="1" column="0">
-              <widget class="QPushButton" name="button_refresh_current">
-               <property name="enabled">
-                <bool>true</bool>
-               </property>
+             <item row="4" column="0">
+              <widget class="QLabel" name="placeholder">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
                  <horstretch>0</horstretch>
                  <verstretch>0</verstretch>
                 </sizepolicy>
                </property>
-               <property name="toolTip">
-                <string>Browse for a new saving location</string>
-               </property>
-               <property name="statusTip">
-                <string>Clear all waypoints and set the target to the current joint trajectory state.</string>
-               </property>
                <property name="text">
-                <string>List Subscription</string>
+                <string>Default topics</string>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="0">
+              <widget class="QPushButton" name="button_reset_topic">
+               <property name="text">
+                <string>Reset Subscription</string>
                </property>
               </widget>
              </item>
              <item row="0" column="0">
-              <widget class="QPushButton" name="button_refresh_all">
+              <widget class="QPushButton" name="button_refresh_topic">
                <property name="text">
-                <string>List All topics</string>
+                <string>Refresh Topics</string>
                </property>
               </widget>
              </item>
             </layout>
            </item>
-           <item row="4" column="0">
-            <widget class="QLabel" name="placeholder">
-             <property name="text">
-              <string>Default topics</string>
+           <item row="2" column="4">
+            <widget class="QTabWidget" name="tabWidget">
+             <property name="currentIndex">
+              <number>0</number>
              </property>
-            </widget>
-           </item>
-           <item row="3" column="0" colspan="2">
-            <widget class="QListWidget" name="list_topics">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="selectionMode">
-              <enum>QAbstractItemView::MultiSelection</enum>
-             </property>
-             <property name="sortingEnabled">
-              <bool>true</bool>
-             </property>
-            </widget>
-           </item>
-           <item row="4" column="2">
-            <widget class="QPushButton" name="button_reset_topic">
-             <property name="text">
-              <string>Reset</string>
-             </property>
+             <widget class="QWidget" name="tab">
+              <attribute name="title">
+               <string>All topics</string>
+              </attribute>
+              <layout class="QGridLayout" name="gridLayout_5">
+               <item row="0" column="0">
+                <widget class="QListWidget" name="list_topics">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="selectionMode">
+                  <enum>QAbstractItemView::MultiSelection</enum>
+                 </property>
+                 <property name="sortingEnabled">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+             <widget class="QWidget" name="tab_2">
+              <attribute name="title">
+               <string>Subscription</string>
+              </attribute>
+              <layout class="QGridLayout" name="gridLayout_6">
+               <item row="0" column="0">
+                <widget class="QListWidget" name="list_subscription">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="selectionMode">
+                  <enum>QAbstractItemView::MultiSelection</enum>
+                 </property>
+                 <property name="sortingEnabled">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
             </widget>
            </item>
           </layout>

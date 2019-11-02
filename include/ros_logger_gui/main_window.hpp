@@ -18,9 +18,7 @@
 #include "ui_main_window.h"
 #include "qnode.hpp"
 
-#define RUNNING 2
-#define STOPPED 1
-#define UNSTARTED 0
+
 
 /*****************************************************************************
 ** Namespace
@@ -48,37 +46,39 @@ public:
         void WriteSettings(); // Save qt program settings when closing
 
         void closeEvent(QCloseEvent *event); // Overloaded function
-        void showNoMasterMessage();
+        void showTopicMsg();
 
-        QString savedir_path;
-        QString filename = "/test.bag";
-        QString savedir_default_path = QDir::homePath() + "/ROS_bags";
-        QStringList curr_topics;
-        QStringList all_topics;
+        QDir savedir_default;
+        QString save_path;
+        QString filename;
+        QString default_save_path;
+        QStringList subscription;
+        QStringList topics;
 
 public Q_SLOTS:
-        void auto_shutdown(bool check);
+        void auto_shutdown();
+        void filter_topics();
+        void update_recstate();
+
         /******************************************
 	** Auto-connections (connectSlotsByName())
 	*******************************************/
-
-                void on_button_browse_dir_clicked(bool check);
-                void on_button_start_logging_clicked(bool check);
-                void on_button_stop_logging_clicked(bool check);
-                void on_button_save_new_dir_clicked(bool check);
-                void on_button_refresh_current_clicked(bool check);
-                void on_button_refresh_all_clicked(bool check);
-                void on_button_update_topic_clicked(bool check);
-                void on_button_reset_topic_clicked(bool check);
-                void on_button_refresh_state_clicked(bool check);
+        void on_button_refresh_topic_clicked(bool check);
+        void on_button_browse_dir_clicked(bool check);
+        void on_button_start_logging_clicked(bool check);
+        void on_button_stop_logging_clicked(bool check);
+        void on_button_save_new_dir_clicked(bool check);
+        void on_button_update_topic_clicked(bool check);
+        void on_button_reset_topic_clicked(bool check);
+        void on_button_refresh_state_clicked(bool check);
         /******************************************
     ** Manual connections
     *******************************************/
-        void updateRecordingState();
 
 Q_SIGNALS:
 
 private:
+        void refresh_topic();
         Ui::MainWindowDesign ui;
         QNode qnode;
 };
