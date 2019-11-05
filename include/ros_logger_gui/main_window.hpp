@@ -48,28 +48,28 @@ public:
         void closeEvent(QCloseEvent *event); // Overloaded function
         void showTopicMsg();
 
-        QDir savedir_default;
         QString save_path;
         QString filename;
         QString default_save_path;
         QStringList subscription;
-        QStringList topics;
+        QStringList all_topics;
 
 public Q_SLOTS:
         void auto_shutdown();
         void filter_topics();
+        void check_topics();
         void update_recstate();
 
         /******************************************
 	** Auto-connections (connectSlotsByName())
 	*******************************************/
-        void on_button_refresh_topic_clicked(bool check);
+        //void on_button_refresh_topic_clicked(bool check);
         void on_button_browse_dir_clicked(bool check);
         void on_button_start_logging_clicked(bool check);
         void on_button_stop_logging_clicked(bool check);
         void on_button_save_new_dir_clicked(bool check);
-        void on_button_update_topic_clicked(bool check);
-        void on_button_reset_topic_clicked(bool check);
+        void on_button_subscribe_clicked(bool check);
+        void on_button_unsubscribe_clicked(bool check);
         void on_button_refresh_state_clicked(bool check);
         /******************************************
     ** Manual connections

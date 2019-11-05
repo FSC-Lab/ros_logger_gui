@@ -70,12 +70,14 @@ public:
     void start_logging();
     void stop_logging();
     void set_savefile(QString filename);
-    void set_topics(std::vector<std::string> new_topics);
+    void add_subscription(std::vector<std::string> topics);
+    void rm_subscription(std::vector<std::string> topics);
+    void reset_subscription();
 
     QStringList get_subscription();
-    QStringList get_topics();
+    QStringList get_all_topics();
     std::vector<std::string> sub_topics;
-    void get_configured_topics();
+    std::vector<std::string> get_configured_topics();
 
 Q_SIGNALS:
     void rosLoopUpdate();
@@ -89,9 +91,7 @@ private:
     char **init_argv;
     bool bag_active_ = false;
 
-    std::vector<ros::Subscriber> sub;
-    void set_subscription(std::vector<std::string> new_topics);
-    void clear_subscription();
+    std::map<std::string, ros::Subscriber> sub; 
     void write_msg(const ros::MessageEvent<topic_tools::ShapeShifter const> &event);
 
     rosbag::Bag bag;
