@@ -53,19 +53,6 @@
            <string>Record Status</string>
           </property>
           <layout class="QGridLayout" name="gridLayout_3">
-           <item row="3" column="1">
-            <widget class="QPushButton" name="button_stop_logging">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="text">
-              <string>Stop</string>
-             </property>
-            </widget>
-           </item>
            <item row="1" column="1">
             <widget class="QLabel" name="logging_status_flag">
              <property name="sizePolicy">
@@ -80,7 +67,7 @@
             </widget>
            </item>
            <item row="2" column="1">
-            <widget class="QPushButton" name="button_start_logging">
+            <widget class="QPushButton" name="button_toggle_logging">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                <horstretch>0</horstretch>
@@ -92,7 +79,7 @@
              </property>
             </widget>
            </item>
-           <item row="4" column="1">
+           <item row="3" column="1">
             <widget class="QPushButton" name="button_refresh_state">
              <property name="text">
               <string>Refresh</string>
@@ -244,7 +231,21 @@
               <enum>QLayout::SetNoConstraint</enum>
              </property>
              <item row="1" column="0">
-              <widget class="QPushButton" name="button_update_topic">
+              <widget class="QPushButton" name="button_unsubscribe">
+               <property name="text">
+                <string>Unsubscribe</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="0">
+              <widget class="QCheckBox" name="checkbox_topics">
+               <property name="text">
+                <string>Select All</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="0">
+              <widget class="QPushButton" name="button_subscribe">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
                  <horstretch>0</horstretch>
@@ -252,12 +253,12 @@
                 </sizepolicy>
                </property>
                <property name="text">
-                <string>Update Subscription</string>
+                <string>Subscribe</string>
                </property>
               </widget>
              </item>
-             <item row="4" column="0">
-              <widget class="QLabel" name="placeholder">
+             <item row="3" column="0">
+              <widget class="QLabel" name="topic_counter">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
                  <horstretch>0</horstretch>
@@ -269,26 +270,12 @@
                </property>
               </widget>
              </item>
-             <item row="3" column="0">
-              <widget class="QPushButton" name="button_reset_topic">
-               <property name="text">
-                <string>Reset Subscription</string>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="0">
-              <widget class="QPushButton" name="button_refresh_topic">
-               <property name="text">
-                <string>Refresh Topics</string>
-               </property>
-              </widget>
-             </item>
             </layout>
            </item>
            <item row="2" column="4">
-            <widget class="QTabWidget" name="tabWidget">
+            <widget class="QTabWidget" name="tab_navigator">
              <property name="currentIndex">
-              <number>0</number>
+              <number>1</number>
              </property>
              <widget class="QWidget" name="tab">
               <attribute name="title">

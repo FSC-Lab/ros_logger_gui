@@ -58,11 +58,10 @@ bool QNode::init()
 	// Add your ros communications here.
 	// Add default topics
 
-	get_configured_topics();
 
-	for (const auto &topic : sub_topics)
+	for (const auto &it : get_configured_topics())
 	{
-		sub.push_back(n.subscribe(topic, 1000, &QNode::write_msg, this));
+		sub.insert({it, n.subscribe(it, 1000, &QNode::write_msg, this)});
 	}
 	start();
 	return true;
@@ -86,13 +85,15 @@ void QNode::run()
 	Q_EMIT rosShutdown(); // used to signal the gui for a shutdown (useful to roslaunch)
 }
 
-void QNode::get_configured_topics()
+std::vector<std::string> QNode::get_configured_topics()
 {
+	std::vector<std::string> topics;
 	ros::NodeHandle n;
-	n.getParam("/ros_logger_gui/topics", sub_topics);
+	n.getParam("/ros_logger_gui/topics",  topics);
+	return topics;
 }
 
-QStringList QNode::get_topics()
+QStringList QNode::get_all_topics()
 {
 	ros::master::getTopics(topic_infos);
 	QStringList topic_names;
@@ -106,27 +107,56 @@ QStringList QNode::get_topics()
 QStringList QNode::get_subscription()
 {
 	QStringList topic_names;
-	for (auto &s_: sub_topics)
+	for (auto &it : sub)
 	{
-		topic_names += QString::fromStdString(s_);
+		topic_names += QString::fromStdString(it.first);
 	}
 	return topic_names;
 }
 
-void QNode::set_topics(std::vector<std::string> new_topics)
+void QNode::add_subscription(std::vector<std::string> topics)
 {
-	sub_topics.insert(sub_topics.end(), new_topics.begin(), new_topics.end());
-	set_subscription(new_topics);
+	ros::NodeHandle n;
+
+	for (const auto &it : topics)
+	{
+		sub.insert({it, n.subscribe(it, 1000, &QNode::write_msg, this)});
+	}
 }
+
+void QNode::rm_subscription(std::vector<std::string> topics)
+{
+	for (const auto &it : topics)
+	{
+		sub[it].shutdown();
+		sub.erase(it);
+	}
+}
+
+void QNode::reset_subscription()
+{
+	ros::NodeHandle n;
+
+	for (auto &it : sub)
+	{
+		it.second.shutdown();
+	}
+	sub.clear();
+	for (const auto &it : get_configured_topics())
+	{
+		sub.insert({it, n.subscribe(it, 1000, &QNode::write_msg, this)});
+	}
+}
+
 
 void QNode::start_logging()
 {
-	if(bag_active_)
+	if (bag_active_)
 	{
 		return;
 	}
-		bag_active_ = true;
-		state = Running;
+	bag_active_ = true;
+	state = Running;
 
 	bag.setCompression(rosbag::compression::Uncompressed);
 	try
@@ -148,8 +178,7 @@ void QNode::stop_logging()
 	bag.close();
 	Q_EMIT logStateChanged();
 	state = Stopped;
-	clear_subscription();
-
+	reset_subscription();
 }
 
 void QNode::set_savefile(QString filename)
@@ -164,37 +193,6 @@ void QNode::write_msg(const ros::MessageEvent<topic_tools::ShapeShifter const> &
 		ros::M_string &header = event.getConnectionHeader();
 		const topic_tools::ShapeShifter::ConstPtr &msg = event.getMessage();
 		bag.write(header["topic"], ros::Time::now(), msg);
-	}
-}
-
-void QNode::clear_subscription()
-{
-	for (auto &s_: sub)
-	{
-		s_.shutdown();
-	}
-	sub.clear();
-}
-
-void QNode::set_subscription(std::vector<std::string> new_topics)
-{
-	ros::NodeHandle n;
-	if (new_topics.empty())
-	{
-		clear_subscription();
-		get_configured_topics();
-		for (const auto &s_ : sub_topics)
-			sub.push_back(n.subscribe(s_, 1000, &QNode::write_msg, this));
-			
-		//sub_topics.push_back("clock");
-		//sub.push_back(n.subscribe("clock", 1000, &QNode::write_msg, this));
-	}
-	else
-	{
-		for (const auto topic : new_topics)
-		{
-			sub.push_back(n.subscribe(topic, 1000, &QNode::write_msg, this));
-		}
 	}
 }
 
