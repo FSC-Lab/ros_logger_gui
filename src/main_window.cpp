@@ -99,22 +99,19 @@ void MainWindow::update_recstate()
     {
     case QNode::Unstarted:
         ui.logging_status_flag->setText("<font color='red'>ROS is not started</font>");
-        ui.button_start_logging->setEnabled(false);
-        ui.button_stop_logging->setEnabled(false);
+        ui.button_toggle_logging->setEnabled(false);
         ui.button_subscribe->setEnabled(false);
         ui.button_unsubscribe->setEnabled(false);
         break;
     case QNode::Stopped:
         ui.logging_status_flag->setText("<font color='red'>Data logging stopped</font>");
-        ui.button_start_logging->setEnabled(true);
-        ui.button_stop_logging->setEnabled(false);
+        ui.button_toggle_logging->setText("Start recording");
         ui.button_subscribe->setEnabled(true);
         ui.button_unsubscribe->setEnabled(true);
         break;
     case QNode::Running:
         ui.logging_status_flag->setText("<font color='green'>Data logging running</font>");
-        ui.button_start_logging->setEnabled(false);
-        ui.button_stop_logging->setEnabled(true);
+        ui.button_toggle_logging->setText("Stop recording");
         ui.button_subscribe->setEnabled(true);
         ui.button_unsubscribe->setEnabled(true);
         break;
@@ -153,16 +150,19 @@ void MainWindow::on_button_refresh_state_clicked(bool check)
     update_recstate();
 }
 
-void MainWindow::on_button_start_logging_clicked(bool check)
+void MainWindow::on_button_toggle_logging_clicked(bool check)
 {
-    filename = ui.line_edit_directory->text();
-    qnode.set_savefile(filename);
-    qnode.start_logging();
-}
-
-void MainWindow::on_button_stop_logging_clicked(bool check)
-{
-    qnode.stop_logging();
+    switch (qnode.state)
+    {
+    case QNode::Stopped:
+        filename = ui.line_edit_directory->text();
+        qnode.set_savefile(filename);
+        qnode.start_logging();
+        break;
+    case QNode::Running:
+        qnode.stop_logging();
+    }
+    update_recstate();
 }
 
 void MainWindow::on_button_save_new_dir_clicked(bool check)

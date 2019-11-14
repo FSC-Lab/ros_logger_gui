@@ -65,8 +65,7 @@ public Q_SLOTS:
 	*******************************************/
         //void on_button_refresh_topic_clicked(bool check);
         void on_button_browse_dir_clicked(bool check);
-        void on_button_start_logging_clicked(bool check);
-        void on_button_stop_logging_clicked(bool check);
+        void on_button_toggle_logging_clicked(bool check);
         void on_button_save_new_dir_clicked(bool check);
         void on_button_subscribe_clicked(bool check);
         void on_button_unsubscribe_clicked(bool check);
