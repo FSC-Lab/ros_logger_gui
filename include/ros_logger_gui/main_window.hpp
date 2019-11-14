@@ -18,8 +18,6 @@
 #include "ui_main_window.h"
 #include "qnode.hpp"
 
-
-
 /*****************************************************************************
 ** Namespace
 *****************************************************************************/
@@ -54,8 +52,14 @@ public:
         QStringList subscription;
         QStringList all_topics;
 
+        enum state
+        {
+                Unstarted,
+                Stopped,
+                Running
+        } RecordState;
+
 public Q_SLOTS:
-        void auto_shutdown();
         void filter_topics();
         void check_topics();
         void update_recstate();
@@ -75,6 +79,8 @@ public Q_SLOTS:
     *******************************************/
 
 Q_SIGNALS:
+        void startSignal();
+        void stopSignal();
 
 private:
         void refresh_topic();

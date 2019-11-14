@@ -43,16 +43,24 @@ MainWindow::MainWindow(int argc, char **argv, QWidget *parent)
     ui.tab_manager->setCurrentIndex(0); // ensure the first tab is showing - qt-designer should have this already hardwired, but often loses it (settings?).
 
     bool init_ros_ok = qnode.init();
+    while (!init_ros_ok)
+    {
+        RecordState = Unstarted;
+        init_ros_ok = qnode.init();
+        sleep(5);
+    }
+    RecordState = Stopped;
 
     /*********************
     ** Logging
     **********************/
-    QObject::connect(&qnode, SIGNAL(rosShutdown()), this, SLOT(close()));
-    QObject::connect(&qnode, SIGNAL(rosShutDown()), this, SLOT(auto_shutdown()));
     QObject::connect(&qnode, SIGNAL(logStateChanged()), this, SLOT(update_recstate()));
-    QObject::connect(ui.line_edit_filter, SIGNAL(textChanged(QString)), this, SLOT(filter_topics()));
+    QObject::connect(&qnode, SIGNAL(rosRaise()), this, SLOT(update_recstate()));
+    QObject::connect(this, SIGNAL(startSignal()), &qnode, SLOT(startRecord()));
+    QObject::connect(this, SIGNAL(stopSignal()), &qnode, SLOT(stopRecord()));
+    QObject::connect(this, SIGNAL(stopSignal()), &qnode, SLOT(doRecord()));
     QObject::connect(ui.checkbox_topics, SIGNAL(stateChanged(int)), this, SLOT(check_topics()));
-
+    QObject::connect(ui.line_edit_filter, SIGNAL(textChanged(QString)), this, SLOT(filter_topics()));
     /*********************
     ** Auto Start
     **********************/
@@ -64,10 +72,9 @@ MainWindow::MainWindow(int argc, char **argv, QWidget *parent)
         default_save_dir.mkpath(default_save_path);
     }
 
-    subscription = qnode.get_subscription();
+    subscription = qnode.lsSubscription();
 
     filename = default_save_path + filename;
-    qnode.set_savefile(filename);
 
     ui.line_edit_directory->setText(filename);
     ui.button_save_new_dir->setEnabled(false);
@@ -95,21 +102,21 @@ void MainWindow::showTopicMsg()
 
 void MainWindow::update_recstate()
 {
-    switch (qnode.state)
+    switch (RecordState)
     {
-    case QNode::Unstarted:
+    case Unstarted:
         ui.logging_status_flag->setText("<font color='red'>ROS is not started</font>");
         ui.button_toggle_logging->setEnabled(false);
         ui.button_subscribe->setEnabled(false);
         ui.button_unsubscribe->setEnabled(false);
         break;
-    case QNode::Stopped:
+    case Stopped:
         ui.logging_status_flag->setText("<font color='red'>Data logging stopped</font>");
         ui.button_toggle_logging->setText("Start recording");
         ui.button_subscribe->setEnabled(true);
         ui.button_unsubscribe->setEnabled(true);
         break;
-    case QNode::Running:
+    case Running:
         ui.logging_status_flag->setText("<font color='green'>Data logging running</font>");
         ui.button_toggle_logging->setText("Stop recording");
         ui.button_subscribe->setEnabled(true);
@@ -121,12 +128,6 @@ void MainWindow::update_recstate()
 /*****************************************************************************
 ** Implementation [Buttons]
 *****************************************************************************/
-
-void MainWindow::auto_shutdown()
-{
-    qnode.stop_logging();
-    update_recstate();
-}
 
 void MainWindow::on_button_browse_dir_clicked(bool check)
 {
@@ -143,7 +144,7 @@ void MainWindow::on_button_browse_dir_clicked(bool check)
 void MainWindow::on_button_refresh_state_clicked(bool check)
 {
     bool qnode_state = false;
-    if (qnode.state == QNode::Unstarted)
+    if (RecordState == Unstarted)
     {
         bool qnode_state = qnode.init();
     }
@@ -152,22 +153,24 @@ void MainWindow::on_button_refresh_state_clicked(bool check)
 
 void MainWindow::on_button_toggle_logging_clicked(bool check)
 {
-    switch (qnode.state)
+    switch (RecordState)
     {
-    case QNode::Stopped:
+    case Stopped:
         filename = ui.line_edit_directory->text();
-        qnode.set_savefile(filename);
-        qnode.start_logging();
+        qnode.updateFilenames(filename);
+        Q_EMIT startSignal();
+        RecordState = Running;
         break;
-    case QNode::Running:
-        qnode.stop_logging();
+    case Running:
+        RecordState = Stopped;
+        Q_EMIT stopSignal();
     }
     update_recstate();
 }
 
 void MainWindow::on_button_save_new_dir_clicked(bool check)
 {
-    qnode.set_savefile(filename);
+    qnode.updateFilenames(filename);
 
     if (QString::compare(save_path, default_save_path))
     {
@@ -223,11 +226,11 @@ void MainWindow::filter_topics()
 void MainWindow::refresh_topic()
 {
     ui.list_subscription->clear();
-    subscription = qnode.get_subscription();
+    subscription = qnode.lsSubscription();
     ui.list_subscription->addItems(subscription);
 
     ui.list_topics->clear();
-    all_topics = qnode.get_all_topics();
+    all_topics = qnode.lsAllTopics();
     ui.list_topics->addItems(all_topics);
 
     for (const auto &sub : subscription)
@@ -253,17 +256,14 @@ void MainWindow::on_button_subscribe_clicked(bool check)
         topics.push_back(it->text().toStdString());
         subscription += it->text();
     }
-    qnode.add_subscription(topics);
+    qnode.addSubscription(topics);
     refresh_topic();
 }
 
 void MainWindow::on_button_unsubscribe_clicked(bool check)
 {
     QList<QListWidgetItem *> rm_topics = ui.list_subscription->selectedItems();
-    if (rm_topics.count() == ui.list_subscription->count())
-    {
-        qnode.reset_subscription();
-    }
+
     ui.topic_counter->setText(QString::number(rm_topics.size()) + QString(" topics selected."));
 
     std::vector<std::string> topics;
@@ -273,7 +273,7 @@ void MainWindow::on_button_unsubscribe_clicked(bool check)
         topics.push_back(it->text().toStdString());
         subscription.removeAt(subscription.indexOf(it->text()));
     }
-    qnode.rm_subscription(topics);
+    qnode.rmSubscription(topics);
     refresh_topic();
 }
 
