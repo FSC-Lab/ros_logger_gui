@@ -58,8 +58,6 @@ MainWindow::MainWindow(int argc, char **argv, QWidget *parent)
     QObject::connect(&qnode, SIGNAL(rosRaise()), this, SLOT(update_recstate()));
     QObject::connect(this, SIGNAL(startSignal()), &qnode, SLOT(startRecord()));
     QObject::connect(this, SIGNAL(stopSignal()), &qnode, SLOT(stopRecord()));
-    QObject::connect(this, SIGNAL(stopSignal()), &qnode, SLOT(doRecord()));
-    QObject::connect(ui.checkbox_topics, SIGNAL(stateChanged(int)), this, SLOT(check_topics()));
     QObject::connect(ui.line_edit_filter, SIGNAL(textChanged(QString)), this, SLOT(filter_topics()));
     /*********************
     ** Auto Start
@@ -157,7 +155,6 @@ void MainWindow::on_button_toggle_logging_clicked(bool check)
     {
     case Stopped:
         filename = ui.line_edit_directory->text();
-        qnode.updateFilenames(filename);
         Q_EMIT startSignal();
         RecordState = Running;
         break;
@@ -170,20 +167,14 @@ void MainWindow::on_button_toggle_logging_clicked(bool check)
 
 void MainWindow::on_button_save_new_dir_clicked(bool check)
 {
-    qnode.updateFilenames(filename);
+    qnode.updateFilenames(save_path);
 
-    if (QString::compare(save_path, default_save_path))
-    {
-        ui.new_location_flag->setText("<font color='green'>Save location confirmed</font>");
-    }
-    else
-    {
-        ui.new_location_flag->setText("<font color='green'>Using default save location</font>");
-    }
+    save_path = QFileDialog::getSaveFileName(this,
+                                             tr("Save Rosbag"),
+                                             tr(qnode.target_filename_.c_str()),
+                                             tr("ROS bag (*.bag)"));
 
-    ui.save_location_flag->setText("Saving ROS bags to " + save_path);
-
-    ui.button_save_new_dir->setEnabled(false);
+    qnode.doRecord();
 }
 
 void MainWindow::check_topics()

@@ -83,6 +83,9 @@ public:
 
     boost::shared_ptr<ros::Subscriber> subscribe(std::string const &topic);
 
+    std::string target_filename_;
+    std::string write_filename_;
+    
     QString echoString;
     bool record_signal_ = true;
     boost::mutex record_mutex_;
@@ -118,8 +121,6 @@ private:
     template <class T>
     static std::string timeToStr(T ros_t);
     rosbag::Bag bag_;
-    std::string target_filename_;
-    std::string write_filename_;
     std::list<std::string> current_files_;
 
     int exit_code_;
