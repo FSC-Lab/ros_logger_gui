@@ -65,14 +65,14 @@ bool QNode::init()
 
 	options_.max_duration = ros::Duration(1200);
 	options_.split = false;
+	options_.append_date = false;
 
 	// Add your ros communications here.
 	// Add default topics
 
 	ros::Time::waitForValid();
 
-	addSubscription(get_configured_topics());
-	start();
+	addSubscription(getConfiguredTopics());
 	start_time_ = ros::Time::now();
 	return true;
 }
@@ -95,29 +95,90 @@ void QNode::run()
 	delete queue_;
 }
 
-void QNode::startRecord()
+bool QNode::startRecording()
 {
-	record_signal_ = true;
+	ros::NodeHandle nh;
+	boost::mutex::scoped_lock record_lock_(record_mutex_);
+	if (!nh.ok())
+		return false;
+
+	if (sub_.empty())
+		return false;
+
+	stop_signal_ = false;
+	return true;
 }
 
-void QNode::stopRecord()
+bool QNode::stopRecording()
 {
-	boost::mutex::scoped_lock record_lock_(record_mutex_);
-	record_signal_ = false;
-	for (auto &it : sub_)
+	stop_signal_ = true;
+	std::vector<std::string> prev_topics_;
 	{
-		it.second->shutdown();
+		boost::mutex::scoped_lock record_lock_(record_mutex_);
+
+		for (auto &it : sub_)
+		{
+			it.second->shutdown();
+			if (remember_topics_)
+				prev_topics_.push_back(it.first);
+		}
 	}
 	sub_.clear();
-	addSubscription(get_configured_topics());
+
+	if (remember_topics_)
+	{
+		addSubscription(prev_topics_);
+	}
+	else
+	{
+		addSubscription(getConfiguredTopics());
+	}
+	return true;
 }
 
-std::vector<std::string> QNode::get_configured_topics()
+bool QNode::setOptions(std::map<std::string, bool> opts)
+{
+	if (opts.count("remember_topics") != 0)
+	{
+		remember_topics_ = opts.find("remember_topics")->second;
+	}
+	if (opts.count("append_date") != 0)
+	{
+		options_.append_date = opts.find("append_date")->second;
+	}
+	if (opts.count("split") != 0)
+	{
+		options_.split = opts.find("split")->second;
+	}
+}
+
+std::vector<std::string> QNode::getConfiguredTopics()
 {
 	std::vector<std::string> topics;
 	ros::NodeHandle n;
 	n.getParam("/ros_logger_gui/topics", topics);
 	return topics;
+}
+
+QString QNode::showBagSize()
+{
+	float bag_size_ = 0;
+	if (queue_size_ > 1024)
+	{
+		const uint64_t KB = 1024;
+		bag_size_ = ceil(1.0 * queue_size_ / KB);
+
+		return QString::number(bag_size_) + "KB";
+	}
+	else if (queue_size_ > 1024 * 1024)
+	{
+		const uint64_t MB = 1024 * 1024;
+		bag_size_ = ceil(1.0 * queue_size_ / MB);
+
+		return QString::number(bag_size_) + "MB";
+	}
+	else
+		return QString();
 }
 
 QStringList QNode::lsAllTopics()
@@ -133,6 +194,7 @@ QStringList QNode::lsAllTopics()
 
 QStringList QNode::lsSubscription()
 {
+	//boost::mutex::scoped_lock record_lock(record_mutex_);
 	QStringList topic_names;
 	for (auto &it : sub_)
 	{
@@ -162,14 +224,15 @@ boost::shared_ptr<ros::Subscriber> QNode::subscribe(std::string const &topic)
 
 void QNode::addSubscription(const std::vector<std::string> topics)
 {
+	boost::mutex::scoped_lock record_lock(record_mutex_);
+
 	for (const auto &it : topics)
-	{
 		sub_.insert({it, subscribe(it)});
-	}
 }
 
 void QNode::rmSubscription(const std::vector<std::string> topics)
 {
+	boost::mutex::scoped_lock record_lock(record_mutex_);
 	for (const auto &it : topics)
 	{
 		if (sub_.count(it) > 0)
@@ -178,6 +241,12 @@ void QNode::rmSubscription(const std::vector<std::string> topics)
 			sub_.erase(it);
 		}
 	}
+}
+
+void QNode::echoRaised(const char *message, ...)
+{
+	Q_EMIT rosRaise();
+	echoString = QString(message);
 }
 
 template <class T>
@@ -196,7 +265,7 @@ std::string QNode::timeToStr(T ros_t)
 
 void QNode::doQueue(const ros::MessageEvent<topic_tools::ShapeShifter const> &event, std::string const &topic)
 {
-	if (record_signal_)
+	if (!stop_signal_)
 	{
 		const ros::M_stringPtr &header_ptr = event.getConnectionHeaderPtr();
 
@@ -241,10 +310,7 @@ void QNode::startWriting()
 
 void QNode::stopWriting()
 {
-	if (!bag_active_)
-		return;
 	bag_.close();
-	Q_EMIT logStateChanged();
 	rename(write_filename_.c_str(), target_filename_.c_str());
 }
 
@@ -331,7 +397,7 @@ void QNode::doRecord()
 		bool finished = false;
 		while (queue_->empty())
 		{
-			if (!record_signal_)
+			if (stop_signal_)
 			{
 				lock.release()->unlock();
 				finished = true;
@@ -485,7 +551,7 @@ bool QNode::checkLogging()
 	return false;
 }
 
-void QNode::updateFilenames(QString filename)
+QString QNode::formatFilenames(QString filename)
 {
 	std::vector<std::string> parts;
 
@@ -512,19 +578,19 @@ void QNode::updateFilenames(QString filename)
 	target_filename_ = parts[0];
 	for (unsigned int i = 1; i < parts.size(); i++)
 	{
-
 		target_filename_ += std::string("_") + parts[i];
 	}
 
 	target_filename_ += std::string(".bag");
-	write_filename_ = target_filename_ + std::string(".active");
+	return QString::fromStdString(target_filename_);
 }
 
-void QNode::echoRaised(const char *message, ...)
+void QNode::updateFilenames(QString filename)
 {
-	Q_EMIT rosRaise();
-	echoString = QString(message);
+	target_filename_ = filename.toStdString();
+	write_filename_ = filename.toStdString() + std::string(".active");
 }
+
 // namespace ros_logger_gui
 
 } // namespace ros_logger_gui
