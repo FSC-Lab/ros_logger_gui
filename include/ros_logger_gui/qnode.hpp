@@ -67,10 +67,12 @@ public:
     // Subscription management
     QStringList lsSubscription();
     QStringList lsAllTopics();
+    QString showBagSize();
+    QString formatFilenames(QString filename);
+
     void addSubscription(const std::vector<std::string> topics);
     void rmSubscription(const std::vector<std::string> topics);
     void echoRaised(const char *message, ...);
-    void echoWarning(const std::string message);
 
     void updateFilenames(QString filename);
     void startWriting();
@@ -79,20 +81,21 @@ public:
 
     std::map<std::string, boost::shared_ptr<ros::Subscriber>> sub_;
 
-    std::vector<std::string> get_configured_topics();
+    std::vector<std::string> getConfiguredTopics();
 
     boost::shared_ptr<ros::Subscriber> subscribe(std::string const &topic);
 
     std::string target_filename_;
     std::string write_filename_;
-    
+
+    bool remember_topics_ = false;
     QString echoString;
-    bool record_signal_ = true;
+    bool stop_signal_ = true;
     boost::mutex record_mutex_;
 
-public Q_SLOTS:
-    void startRecord();
-    void stopRecord();
+    bool startRecording();
+    bool stopRecording();
+    bool setOptions(std::map<std::string, bool> opt_mapping);
     void doRecord();
 
 Q_SIGNALS:
@@ -129,7 +132,7 @@ private:
     boost::condition_variable_any queue_condition_;
     boost::mutex queue_mutex_;
     std::queue<rosbag::OutgoingMessage> *queue_;
-    uint64_t queue_size_;
+    uint64_t queue_size_ = 0;
     uint64_t max_queue_size_;
 
     uint64_t split_count_;

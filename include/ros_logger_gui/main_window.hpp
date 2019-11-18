@@ -46,9 +46,8 @@ public:
         void closeEvent(QCloseEvent *event); // Overloaded function
         void showTopicMsg();
 
-        QString save_path;
-        QString filename;
-        QString default_save_path;
+        QString file_path;
+        QString file_name;
         QStringList subscription;
         QStringList all_topics;
 
@@ -59,31 +58,31 @@ public:
                 Running
         } RecordState;
 
+        void updateUI();
+
 public Q_SLOTS:
-        void filter_topics();
-        void check_topics();
-        void update_recstate();
 
         /******************************************
 	** Auto-connections (connectSlotsByName())
 	*******************************************/
-        //void on_button_refresh_topic_clicked(bool check);
-        void on_button_browse_dir_clicked(bool check);
-        void on_button_toggle_logging_clicked(bool check);
-        void on_button_save_new_dir_clicked(bool check);
+        void on_list_topics_itemSelectionChanged();
+        void on_list_subscription_itemSelectionChanged();
+        void on_checkBox_remember_stateChanged(int);
+        void on_checkBox_add_date_stateChanged(int);
+        void on_line_edit_filter_textChanged(QString);
+        void on_button_toggle_recording_clicked(bool check);
+        void on_button_select_all_clicked(bool check);
+        void on_button_save_clicked(bool check);
         void on_button_subscribe_clicked(bool check);
         void on_button_unsubscribe_clicked(bool check);
-        void on_button_refresh_state_clicked(bool check);
+        void on_button_reconnect_clicked(bool check);
         /******************************************
     ** Manual connections
     *******************************************/
 
-Q_SIGNALS:
-        void startSignal();
-        void stopSignal();
-
 private:
-        void refresh_topic();
+        bool selected_all_;
+        void updateTopics();
         Ui::MainWindowDesign ui;
         QNode qnode;
 };

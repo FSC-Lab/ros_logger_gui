@@ -32,55 +32,48 @@ using namespace Qt;
 
 MainWindow::MainWindow(int argc, char **argv, QWidget *parent)
     : QMainWindow(parent), qnode(argc, argv),
-      filename("/test.bag"),
-      default_save_path(QDir::homePath() + "/ROS_bags")
+      file_name("/rosbag.bag"),
+      file_path(QDir::homePath() + "/ROS_bags")
 {
-    ui.setupUi(this);                                                                    // Calling this incidentally connects all ui's triggers to on_...() callbacks in this class.
-    QObject::connect(ui.actionAbout_Qt, SIGNAL(triggered(bool)), qApp, SLOT(aboutQt())); // qApp is a global variable for the application
+    ui.setupUi(this); // Calling this incidentally connects all ui's triggers to on_...() callbacks in this class.
 
     ReadSettings();
     setWindowIcon(QIcon(":/images/icon.png"));
     ui.tab_manager->setCurrentIndex(0); // ensure the first tab is showing - qt-designer should have this already hardwired, but often loses it (settings?).
 
     bool init_ros_ok = qnode.init();
-    while (!init_ros_ok)
+    if (!init_ros_ok)
     {
         RecordState = Unstarted;
         init_ros_ok = qnode.init();
-        sleep(5);
     }
+
     RecordState = Stopped;
 
     /*********************
-    ** Logging
-    **********************/
-    QObject::connect(&qnode, SIGNAL(logStateChanged()), this, SLOT(update_recstate()));
-    QObject::connect(&qnode, SIGNAL(rosRaise()), this, SLOT(update_recstate()));
-    QObject::connect(this, SIGNAL(startSignal()), &qnode, SLOT(startRecord()));
-    QObject::connect(this, SIGNAL(stopSignal()), &qnode, SLOT(stopRecord()));
-    QObject::connect(ui.line_edit_filter, SIGNAL(textChanged(QString)), this, SLOT(filter_topics()));
+     * * Signals
+    *********************/
+    //QObject::connect(&qnode, SIGNAL(rosRaise()), this, SLOT(updateUI()));
+
     /*********************
     ** Auto Start
     **********************/
 
-    QDir default_save_dir(default_save_path);
+    QDir save_dir(file_path);
 
-    if (!default_save_dir.exists())
+    if (!save_dir.exists())
     {
-        default_save_dir.mkpath(default_save_path);
+        save_dir.mkpath(file_path);
     }
 
     subscription = qnode.lsSubscription();
 
-    filename = default_save_path + filename;
+    ui.button_save->setEnabled(false);
+    ui.save_flag->setText("No Recorded Bag Data");
+    ui.button_select_all->setText("Select All");
 
-    ui.line_edit_directory->setText(filename);
-    ui.button_save_new_dir->setEnabled(false);
-    ui.save_location_flag->setText("Saving ROS bags to " + default_save_path);
-    ui.new_location_flag->setText("<font color='green'>Using default save location</font>");
-
-    update_recstate();
-    refresh_topic();
+    updateUI();
+    updateTopics();
 }
 
 MainWindow::~MainWindow() {}
@@ -98,27 +91,30 @@ void MainWindow::showTopicMsg()
     QMessageBox msgBox;
 }
 
-void MainWindow::update_recstate()
+void MainWindow::updateUI()
 {
     switch (RecordState)
     {
     case Unstarted:
-        ui.logging_status_flag->setText("<font color='red'>ROS is not started</font>");
-        ui.button_toggle_logging->setEnabled(false);
+        ui.logging_status_flag->setText("<font color='red'>ROS is not started. Retrying</font>");
+        ui.button_toggle_recording->setEnabled(false);
         ui.button_subscribe->setEnabled(false);
         ui.button_unsubscribe->setEnabled(false);
+        ui.button_reconnect->setText("Reconnect");
         break;
     case Stopped:
         ui.logging_status_flag->setText("<font color='red'>Data logging stopped</font>");
-        ui.button_toggle_logging->setText("Start recording");
+        ui.button_toggle_recording->setText("Start recording");
         ui.button_subscribe->setEnabled(true);
         ui.button_unsubscribe->setEnabled(true);
+        ui.button_reconnect->setText("Refresh Screen");
         break;
     case Running:
         ui.logging_status_flag->setText("<font color='green'>Data logging running</font>");
-        ui.button_toggle_logging->setText("Stop recording");
+        ui.button_toggle_recording->setText("Stop recording");
         ui.button_subscribe->setEnabled(true);
         ui.button_unsubscribe->setEnabled(true);
+        ui.button_reconnect->setText("Refresh Screen");
         break;
     }
 }
@@ -127,82 +123,148 @@ void MainWindow::update_recstate()
 ** Implementation [Buttons]
 *****************************************************************************/
 
-void MainWindow::on_button_browse_dir_clicked(bool check)
+void MainWindow::on_button_reconnect_clicked(bool check)
 {
-    save_path = QFileDialog::getExistingDirectory(this,
-                                                  "Save to",
-                                                  QDir::currentPath(),
-                                                  QFileDialog::ShowDirsOnly);
-    filename = save_path + "/test.bag";
-    ui.new_location_flag->setText("<font color='red'>Save location changed!</font>");
-    ui.line_edit_directory->setText(filename);
-    ui.button_save_new_dir->setEnabled(true);
-}
-
-void MainWindow::on_button_refresh_state_clicked(bool check)
-{
-    bool qnode_state = false;
+    bool init_ros_ok = false;
     if (RecordState == Unstarted)
     {
-        bool qnode_state = qnode.init();
+        init_ros_ok = qnode.init();
     }
-    update_recstate();
+    if (init_ros_ok || RecordState != Unstarted)
+    {
+        updateUI();
+        updateTopics();
+    }
 }
 
-void MainWindow::on_button_toggle_logging_clicked(bool check)
+void MainWindow::on_button_toggle_recording_clicked(bool check)
 {
     switch (RecordState)
     {
     case Stopped:
-        filename = ui.line_edit_directory->text();
-        Q_EMIT startSignal();
-        RecordState = Running;
+        if (qnode.startRecording())
+            RecordState = Running;
         break;
     case Running:
-        RecordState = Stopped;
-        Q_EMIT stopSignal();
+        if (qnode.stopRecording())
+            RecordState = Stopped;
+
+        if (qnode.showBagSize().isNull())
+        {
+            ui.save_flag->setText("No data recorded");
+        }
+        else
+        {
+            ui.save_flag->setText("Unsaved recorder data. Size is " + qnode.showBagSize());
+            ui.button_save->setEnabled(true);
+        }
     }
-    update_recstate();
+    updateUI();
+    updateTopics();
 }
 
-void MainWindow::on_button_save_new_dir_clicked(bool check)
+void MainWindow::on_button_save_clicked(bool check)
 {
-    qnode.updateFilenames(save_path);
-
-    save_path = QFileDialog::getSaveFileName(this,
+    file_name = file_path + qnode.formatFilenames(file_name);
+    file_name = QFileDialog::getSaveFileName(this,
                                              tr("Save Rosbag"),
-                                             tr(qnode.target_filename_.c_str()),
+                                             file_name,
                                              tr("ROS bag (*.bag)"));
+    qnode.updateFilenames(file_name);
 
     qnode.doRecord();
 }
-
-void MainWindow::check_topics()
+void MainWindow::on_checkBox_add_date_stateChanged(int)
 {
-    if (ui.checkbox_topics->isChecked())
+    std::map<std::string, bool> date;
+    if (ui.checkBox_add_date->isChecked())
     {
-        switch (ui.tab_navigator->currentIndex())
-        {
-        case 0:
-            ui.list_topics->selectAll();
-            break;
-        case 1:
-            ui.list_subscription->selectAll();
-            break;
-        }
-        ui.topic_counter->setText("All topics selected");
+        date["append_date"] = true;
     }
     else
     {
-        ui.list_topics->clear();
-        ui.list_subscription->clear();
-        ui.list_topics->clear();
-        subscription.clear();
+        date["append_date"] = false;
     }
-    ui.checkbox_topics->setCheckState(Qt::Unchecked);
+    qnode.setOptions(date);
 }
 
-void MainWindow::filter_topics()
+void MainWindow::on_checkBox_remember_stateChanged(int)
+{
+    std::map<std::string, bool> remember;
+    if (ui.checkBox_remember->isChecked())
+    {
+        remember["remember_topics"] = true;
+    }
+    else
+    {
+        remember["remember_topics"] = false;
+    }
+    qnode.setOptions(remember);
+}
+
+void MainWindow::on_list_subscription_itemSelectionChanged()
+{
+    int selected = ui.list_subscription->selectedItems().count();
+    int all = ui.list_subscription->count();
+    if (selected == all)
+    {
+        ui.button_select_all->setText("Unselect All");
+        selected_all_ = true;
+    }
+    else
+    {
+        ui.button_select_all->setText("Select All");
+        selected_all_ = false;
+    }
+}
+
+void MainWindow::on_list_topics_itemSelectionChanged()
+{
+    int selected = ui.list_topics->selectedItems().count();
+    int all = ui.list_topics->count();
+    if (selected == all)
+    {
+        ui.button_select_all->setText("Unselect All");
+        selected_all_ = true;
+    }
+    else
+    {
+        ui.button_select_all->setText("Select All");
+        selected_all_ = false;
+    }
+}
+
+void MainWindow::on_button_select_all_clicked(bool check)
+{
+    switch (ui.tab_navigator->currentIndex())
+    {
+    case 0:
+        if (!selected_all_)
+        {
+            ui.list_topics->selectAll();
+        }
+        else
+        {
+            ui.list_topics->clear();
+            updateTopics();
+        }
+        break;
+    case 1:
+        if (!selected_all_)
+        {
+            ui.list_subscription->selectAll();
+        }
+        else
+        {
+            ui.list_subscription->clear();
+            updateTopics();
+        }
+        break;
+    }
+    ui.topic_counter->setText("All topics selected");
+}
+
+void MainWindow::on_line_edit_filter_textChanged(QString)
 {
     QString filter = ui.line_edit_filter->text();
     QStringList filtered_sub = subscription.filter(filter);
@@ -214,7 +276,7 @@ void MainWindow::filter_topics()
     ui.list_topics->addItems(filtered_topics);
 }
 
-void MainWindow::refresh_topic()
+void MainWindow::updateTopics()
 {
     ui.list_subscription->clear();
     subscription = qnode.lsSubscription();
@@ -248,7 +310,7 @@ void MainWindow::on_button_subscribe_clicked(bool check)
         subscription += it->text();
     }
     qnode.addSubscription(topics);
-    refresh_topic();
+    updateTopics();
 }
 
 void MainWindow::on_button_unsubscribe_clicked(bool check)
@@ -265,7 +327,7 @@ void MainWindow::on_button_unsubscribe_clicked(bool check)
         subscription.removeAt(subscription.indexOf(it->text()));
     }
     qnode.rmSubscription(topics);
-    refresh_topic();
+    updateTopics();
 }
 
 /*****************************************************************************
