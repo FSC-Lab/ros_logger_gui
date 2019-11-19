@@ -73,6 +73,7 @@ bool QNode::init()
 	ros::Time::waitForValid();
 
 	addSubscription(getConfiguredTopics());
+	start();
 	start_time_ = ros::Time::now();
 	return true;
 }
@@ -93,6 +94,11 @@ void QNode::run()
 	}
 	std::cout << "Ros shutdown, proceeding to close the gui." << std::endl;
 	delete queue_;
+}
+
+std::string QNode::showMaster()
+{
+	return ros::master::getURI();
 }
 
 bool QNode::startRecording()
@@ -364,7 +370,7 @@ bool QNode::checkDuration(const ros::Time &t)
 	return false;
 }
 
-void QNode::doRecord()
+bool QNode::doRecord()
 {
 	// Open bag file for writing
 	startWriting();
@@ -381,7 +387,7 @@ void QNode::doRecord()
 		ROS_ERROR_STREAM(ex.what());
 		exit_code_ = 1;
 		stopWriting();
-		return;
+		return false;
 	}
 
 	check_disk_next_ = ros::WallTime::now() + ros::WallDuration().fromSec(20.0);
@@ -390,17 +396,18 @@ void QNode::doRecord()
 	// Except it should only get checked if the node is not ok, and thus
 	// it shouldn't be in contention.
 	ros::NodeHandle nh;
+	bool done = false;
+
 	while (nh.ok() || !queue_->empty())
 	{
 		boost::unique_lock<boost::mutex> lock(queue_mutex_);
 
-		bool finished = false;
 		while (queue_->empty())
 		{
 			if (stop_signal_)
 			{
 				lock.release()->unlock();
-				finished = true;
+				done = true;
 				break;
 			}
 			boost::xtime xt;
@@ -413,11 +420,11 @@ void QNode::doRecord()
 			queue_condition_.timed_wait(lock, xt);
 			if (checkDuration(ros::Time::now()))
 			{
-				finished = true;
+				done = true;
 				break;
 			}
 		}
-		if (finished)
+		if (done)
 			break;
 
 		rosbag::OutgoingMessage out = queue_->front();
@@ -446,6 +453,7 @@ void QNode::doRecord()
 	}
 
 	stopWriting();
+	return done;
 }
 
 bool QNode::scheduledCheckDisk()

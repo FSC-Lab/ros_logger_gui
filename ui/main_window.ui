@@ -48,7 +48,7 @@
           </property>
           <layout class="QGridLayout" name="gridLayout_9">
            <item row="0" column="0">
-            <widget class="QLabel" name="label_master_url">
+            <widget class="QLabel" name="label_master">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Minimum" vsizetype="Maximum">
                <horstretch>0</horstretch>
@@ -56,7 +56,7 @@
               </sizepolicy>
              </property>
              <property name="text">
-              <string>Master URL:</string>
+              <string>Connected to master at:</string>
              </property>
             </widget>
            </item>
@@ -141,7 +141,7 @@
            <item row="5" column="1">
             <widget class="QCheckBox" name="checkBox_add_date">
              <property name="text">
-              <string>Add Date</string>
+              <string>Append Date</string>
              </property>
             </widget>
            </item>

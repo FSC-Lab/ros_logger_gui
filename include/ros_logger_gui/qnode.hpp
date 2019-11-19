@@ -73,6 +73,7 @@ public:
     void addSubscription(const std::vector<std::string> topics);
     void rmSubscription(const std::vector<std::string> topics);
     void echoRaised(const char *message, ...);
+    std::string showMaster();
 
     void updateFilenames(QString filename);
     void startWriting();
@@ -95,14 +96,12 @@ public:
 
     bool startRecording();
     bool stopRecording();
+    bool doRecord();
     bool setOptions(std::map<std::string, bool> opt_mapping);
-    void doRecord();
 
 Q_SIGNALS:
     void rosRaise();
     void rosLoopUpdate();
-    void rosLaunch();
-    void logStateChanged();
 
 private:
     int init_argc;

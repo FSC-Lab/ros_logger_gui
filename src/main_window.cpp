@@ -47,13 +47,11 @@ MainWindow::MainWindow(int argc, char **argv, QWidget *parent)
         RecordState = Unstarted;
         init_ros_ok = qnode.init();
     }
-
-    RecordState = Stopped;
-
-    /*********************
-     * * Signals
-    *********************/
-    //QObject::connect(&qnode, SIGNAL(rosRaise()), this, SLOT(updateUI()));
+    else
+    {
+        ui.label_master->setText("Connected to master at:" + QString::fromStdString(qnode.showMaster()));
+        RecordState = Stopped;
+    }
 
     /*********************
     ** Auto Start
@@ -132,6 +130,7 @@ void MainWindow::on_button_reconnect_clicked(bool check)
     }
     if (init_ros_ok || RecordState != Unstarted)
     {
+        ui.label_master->setText("Connected to master at: " + QString::fromStdString(qnode.showMaster()));
         updateUI();
         updateTopics();
     }
@@ -172,7 +171,11 @@ void MainWindow::on_button_save_clicked(bool check)
                                              tr("ROS bag (*.bag)"));
     qnode.updateFilenames(file_name);
 
-    qnode.doRecord();
+    if (qnode.doRecord())
+    {
+        ui.save_flag->setText("ROS bag saved");
+        ui.button_save->setEnabled(false);
+    }
 }
 void MainWindow::on_checkBox_add_date_stateChanged(int)
 {
