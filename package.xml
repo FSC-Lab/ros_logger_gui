@@ -20,12 +20,10 @@
   <exec_depend>std_msgs</exec_depend>
 
   <buildtool_depend>catkin</buildtool_depend>
-  <build_depend>qt_build</build_depend>
   <build_depend>roscpp</build_depend>
-  <build_depend>libqt4-dev</build_depend>
-  <exec_depend>qt_build</exec_depend>
+  <build_depend>libqt5-dev</build_depend>
   <exec_depend>roscpp</exec_depend>
-  <exec_depend>libqt4-dev</exec_depend>
+  <exec_depend>libqt5-dev</exec_depend>
 
  
 </package>

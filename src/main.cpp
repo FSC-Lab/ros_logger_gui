@@ -9,7 +9,7 @@
 ** Includes
 *****************************************************************************/
 
-#include <QtGui>
+#include <QtWidgets>
 #include <QApplication>
 #include "../include/ros_logger_gui/main_window.hpp"
 

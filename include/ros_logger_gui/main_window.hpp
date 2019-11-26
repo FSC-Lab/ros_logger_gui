@@ -12,8 +12,8 @@
 ** Includes
 *****************************************************************************/
 
-#include <QtGui/QMainWindow>
-#include <QFileDialog>
+#include <QtWidgets/QMainWindow>
+#include <QtWidgets/QFileDialog>
 #include <QAbstractItemView>
 #include "ui_main_window.h"
 #include "qnode.hpp"
