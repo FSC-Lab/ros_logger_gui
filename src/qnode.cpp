@@ -59,7 +59,8 @@ bool QNode::init()
 	{
 		return false;
 	}
-	ros::start(); // explicitly needed since our nodehandle is going out of scope.
+	ros::start(); // explicitly needed since our nodehandle is going ou
+	t of scope.
 
 	ros::NodeHandle n;
 
@@ -90,10 +91,16 @@ void QNode::run()
 		/* signal a ros loop update  */
 		Q_EMIT rosLoopUpdate();
 
+		if (!ros::master::check())
+		{
+			delete queue_;
+			Q_EMIT rosShutdown();
+			break;
+		}
 		loop_rate.sleep();
 	}
-	std::cout << "Ros shutdown, proceeding to close the gui." << std::endl;
 	delete queue_;
+	Q_EMIT rosShutdown();
 }
 
 std::string QNode::showMaster()
@@ -103,6 +110,7 @@ std::string QNode::showMaster()
 
 bool QNode::startRecording()
 {
+	stop_signal_ = false;
 	ros::NodeHandle nh;
 	boost::mutex::scoped_lock record_lock_(record_mutex_);
 	if (!nh.ok())
@@ -111,7 +119,6 @@ bool QNode::startRecording()
 	if (sub_.empty())
 		return false;
 
-	stop_signal_ = false;
 	return true;
 }
 
@@ -318,6 +325,7 @@ void QNode::stopWriting()
 {
 	bag_.close();
 	rename(write_filename_.c_str(), target_filename_.c_str());
+	bag_active_ = false;
 }
 
 bool QNode::checkSize()

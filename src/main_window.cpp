@@ -37,6 +37,7 @@ MainWindow::MainWindow(int argc, char **argv, QWidget *parent)
 {
     ui.setupUi(this); // Calling this incidentally connects all ui's triggers to on_...() callbacks in this class.
 
+    QObject::connect(&qnode, SIGNAL(rosShutdown()), this, SLOT(close()));
     ReadSettings();
     setWindowIcon(QIcon(":/images/icon.png"));
     ui.tab_manager->setCurrentIndex(0); // ensure the first tab is showing - qt-designer should have this already hardwired, but often loses it (settings?).
@@ -164,19 +165,21 @@ void MainWindow::on_button_toggle_recording_clicked(bool check)
 
 void MainWindow::on_button_save_clicked(bool check)
 {
-    file_name = file_path + qnode.formatFilenames(file_name);
-    file_name = QFileDialog::getSaveFileName(this,
+    QString write_name = file_path + qnode.formatFilenames(file_name);
+    write_name = QFileDialog::getSaveFileName(this,
                                              tr("Save Rosbag"),
-                                             file_name,
+                                             write_name,
                                              tr("ROS bag (*.bag)"));
-    qnode.updateFilenames(file_name);
+    qnode.updateFilenames(write_name);
 
     if (qnode.doRecord())
     {
         ui.save_flag->setText("ROS bag saved");
         ui.button_save->setEnabled(false);
     }
+    write_name = file_path + qnode.formatFilenames(file_name);
 }
+
 void MainWindow::on_checkBox_add_date_stateChanged(int)
 {
     std::map<std::string, bool> date;
@@ -339,14 +342,14 @@ void MainWindow::on_button_unsubscribe_clicked(bool check)
 
 void MainWindow::ReadSettings()
 {
-    QSettings settings("Qt-Ros Package", "qt_ground_station");
+    QSettings settings("Qt-Ros Package", "ros_logger_gui");
     restoreGeometry(settings.value("geometry").toByteArray());
     restoreState(settings.value("windowState").toByteArray());
 }
 
 void MainWindow::WriteSettings()
 {
-    QSettings settings("Qt-Ros Package", "qt_ground_station");
+    QSettings settings("Qt-Ros Package", "ros_logger_gui");
     settings.setValue("geometry", saveGeometry());
     settings.setValue("windowState", saveState());
 }

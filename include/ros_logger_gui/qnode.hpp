@@ -102,6 +102,7 @@ public:
 Q_SIGNALS:
     void rosRaise();
     void rosLoopUpdate();
+    void rosShutdown();
 
 private:
     int init_argc;
