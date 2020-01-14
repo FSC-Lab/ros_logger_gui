@@ -12,9 +12,14 @@
 ** Includes
 *****************************************************************************/
 
-#include <QtGui/QMainWindow>
-#include <QFileDialog>
 #include <QAbstractItemView>
+#include <QDir>
+#include <QFileDialog>
+#include <QListWidget>
+#include <QMainWindow>
+#include <QMessageBox>
+#include <QSettings>
+
 #include "ui_main_window.h"
 #include "qnode.hpp"
 

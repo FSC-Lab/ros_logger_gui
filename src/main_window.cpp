@@ -9,11 +9,7 @@
 ** Includes
 *****************************************************************************/
 
-#include <QtGui>
-#include <QFileDialog>
-#include <QDir>
-#include <QListWidget>
-#include <QMessageBox>
+
 #include <iostream>
 #include "../include/ros_logger_gui/main_window.hpp"
 

@@ -1,11 +1,3 @@
-/**
- * @file /src/qnode.cpp
- *
- * @brief Ros communication central!
- *
- * @date February 2011
- **/
-
 /*****************************************************************************
 ** Includes
 *****************************************************************************/
@@ -59,8 +51,7 @@ bool QNode::init()
 	{
 		return false;
 	}
-	ros::start(); // explicitly needed since our nodehandle is going ou
-	t of scope.
+	ros::start(); // explicitly needed since our nodehandle is going out of scope.
 
 	ros::NodeHandle n;
 
