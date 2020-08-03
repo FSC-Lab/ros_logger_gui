@@ -11,11 +11,11 @@
 
 #include <QtGlobal>
 #if QT_VERSION >= 0x050000
-    #include <QtWidgets>
-    #include <QApplication>
+#include <QApplication>
+#include <QtWidgets>
 #else
-    #include <QtGui>
-    #include <QApplication>
+#include <QApplication>
+#include <QtGui>
 #endif
 #include "../include/ros_logger_gui/main_window.hpp"
 
@@ -24,15 +24,14 @@
 *****************************************************************************/
 
 int main(int argc, char **argv) {
+  /*********************
+  ** Qt
+  **********************/
+  QApplication app(argc, argv);
+  ros_logger_gui::MainWindow w(argc, argv);
+  w.show();
+  app.connect(&app, SIGNAL(lastWindowClosed()), &app, SLOT(quit()));
+  int result = app.exec();
 
-    /*********************
-    ** Qt
-    **********************/
-    QApplication app(argc, argv);
-    ros_logger_gui::MainWindow w(argc,argv);
-    w.show();
-    app.connect(&app, SIGNAL(lastWindowClosed()), &app, SLOT(quit()));
-    int result = app.exec();
-
-	return result;
+  return result;
 }
