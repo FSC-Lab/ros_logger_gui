@@ -59,8 +59,7 @@ bool QNode::init()
 	{
 		return false;
 	}
-	ros::start(); // explicitly needed since our nodehandle is going ou
-	t of scope.
+	ros::start(); // explicitly needed since our nodehandle is going out of scope.
 
 	ros::NodeHandle n;
 
