@@ -37,6 +37,14 @@ namespace ros_logger_gui {
 
 class MainWindow : public QMainWindow {
   Q_OBJECT
+  Ui::MainWindowDesign ui_;
+  QNode qn_;
+  QString file_name_;
+  QString file_path_;
+  QStringList subscription_;
+  QStringList all_topics_;
+
+  bool selected_all_;
 
 public:
   MainWindow(int argc, char **argv, QWidget *parent = 0);
@@ -47,11 +55,6 @@ public:
 
   void closeEvent(QCloseEvent *event); // Overloaded function
   void showTopicMsg();
-
-  QString file_path;
-  QString file_name;
-  QStringList subscription;
-  QStringList all_topics;
 
   enum state { Unstarted, Stopped, Running } RecordState;
 
@@ -78,10 +81,7 @@ public Q_SLOTS:
    *******************************************/
 
 private:
-  bool selected_all_;
   void updateTopics();
-  Ui::MainWindowDesign ui;
-  QNode qnode;
 };
 
 } // namespace ros_logger_gui
