@@ -247,12 +247,6 @@ void QNode::rmSubscription(const std::vector<std::string> topics)
 	}
 }
 
-void QNode::echoRaised(const char *message, ...)
-{
-	Q_EMIT rosRaise();
-	echoString = QString(message);
-}
-
 template <class T>
 std::string QNode::timeToStr(T ros_t)
 {
@@ -306,7 +300,7 @@ void QNode::startWriting()
 	}
 	catch (rosbag::BagException e)
 	{
-		echoRaised("Error writing: %s", e.what());
+		ROS_ERROR("Error writing: %s", e.what());
 		exit_code_ = 1;
 		ros::shutdown();
 	}
@@ -474,7 +468,7 @@ bool QNode::checkDisk()
 	struct statvfs fiData;
 	if ((statvfs(bag_name.c_str(), &fiData)) < 0)
 	{
-		echoRaised("Failed to check filesystem stats.");
+		ROS_ERROR("Failed to check filesystem stats.");
 		return true;
 	}
 	unsigned long long free = 1ULL * fiData.f_bsize * fiData.f_bavail;
@@ -487,7 +481,7 @@ bool QNode::checkDisk()
 	}
 	else if (free < 5 * options_.min_space)
 	{
-		echoRaised("%f GB of free space is available on disk with %s.", free_gb, bag_.getFileName().c_str());
+		ROS_ERROR("%f GB of free space is available on disk with %s.", free_gb, bag_.getFileName().c_str());
 	}
 	else
 	{
@@ -504,7 +498,7 @@ bool QNode::checkDisk()
 	}
 	catch (boost::filesystem::filesystem_error &e)
 	{
-		echoRaised("Failed to check filesystem stats [%s].", e.what());
+		ROS_ERROR("Failed to check filesystem stats [%s].", e.what());
 		writing_enabled_ = false;
 		return false;
 	}
@@ -515,7 +509,7 @@ bool QNode::checkDisk()
 	}
 	else if (info.available < 5 * options_.min_space)
 	{
-		echoRaised("%f GB of free space is available on disk with %s.", free_gb, bag_.getFileName().c_str());
+		ROS_ERROR("%f GB of free space is available on disk with %s.", free_gb, bag_.getFileName().c_str());
 		writing_enabled_ = true;
 	}
 	else
@@ -536,7 +530,7 @@ void QNode::checkNumSplits()
 			int err = unlink(current_files_.front().c_str());
 			if (err != 0)
 			{
-				echoRaised("Unable to remove %s: %s", current_files_.front().c_str(), strerror(errno));
+				ROS_ERROR("Unable to remove %s: %s", current_files_.front().c_str(), strerror(errno));
 			}
 			current_files_.pop_front();
 		}
@@ -553,7 +547,7 @@ bool QNode::checkLogging()
 	{
 		warn_next_ = now + ros::WallDuration().fromSec(5.0);
 
-		echoRaised("Not logging message because logging disabled.  Most likely cause is a full disk.");
+		ROS_ERROR("Not logging message because logging disabled.  Most likely cause is a full disk.");
 	}
 	return false;
 }
@@ -579,7 +573,7 @@ QString QNode::formatFilenames(QString filename)
 
 	if (parts.size() == 0)
 	{
-		echoRaised("Bag filename is empty (neither of these was specified: prefix, append_date, split)");
+		ROS_ERROR("Bag filename is empty (neither of these was specified: prefix, append_date, split)");
 	}
 
 	target_filename_ = parts[0];

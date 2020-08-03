@@ -72,7 +72,6 @@ public:
 
     void addSubscription(const std::vector<std::string> topics);
     void rmSubscription(const std::vector<std::string> topics);
-    void echoRaised(const char *message, ...);
     std::string showMaster();
 
     void updateFilenames(QString filename);
